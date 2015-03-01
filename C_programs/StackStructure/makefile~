@@ -1,0 +1,12 @@
+FLAG = -Wall -W -O -g
+
+test: main.o stackFunction.o
+	gcc ${FLAG} -o $@ $^
+	rm ./*.o
+
+%.o: %.c stackFunction.h
+	gcc ${FLAG} -c $<
+
+clear:
+	rm test *.o
+

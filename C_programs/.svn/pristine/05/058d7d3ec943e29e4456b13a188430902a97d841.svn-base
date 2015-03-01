@@ -1,0 +1,272 @@
+/***************************************************************************
+    CSC209 Assignment 2 C and Pointers -> smalloc.c
+    Start: Febuary 7th, 2015
+    By: Joshua Fung
+**************************************************************************/
+
+/*************************************************************************
+    This is the file smalloc.c, it includes the function mem_init(size), smalloc (),
+    sfree (), and mem_clean (). These function create a custom function that
+    works like malloc and free.
+
+    mem_init (size) -> memory initialize, initialize the memory block of size,
+    giving the address to mem. Also store it in the freelist.
+    This block is store in freelist which give the address of the data block
+    and the size of the block. This also initialize the emty allocated_list.
+    If the function fails it return NULL.
+
+    smalloc (nbytes) -> small memory allocate, goes in to the freelist 
+    and finds block that match the size. If there is no block the same size,
+    it will tries to find a block with a larger size and divide it into the wanted
+    byte size and free block. It will store the allocated block address in the 
+    alloca_list and put the new address of the free bolck back to the freelist, as
+    a linked list. If the function fails it returns NULL.
+
+    *** Problem that might arrise ***
+      Three freelist might be a long linked list of small block, like 1 bytes, cause by 
+      sfree (). At this point the function behaves as if there is not space and return NULL.
+      The smalloc will not mearge the small blocks that is continous.
+
+    sfree (addr)  -> small free, puts the Block back to the freelist letting smalloc to allcate 
+    this block again. It will not mearge any blocks that is continuous.
+
+    mem_clean () -> memory clean, cleans the block from mem_init from by the address mem. 
+    Using the free () function.
+*******************************************************************************/
+
+// Header files
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/mman.h>
+
+// Custom Header files
+#include "smalloc.h"
+
+// Global varables
+mmapBlock *mem;
+Block *freelist;
+Block *allocated_list;
+
+// Function specific to these functions, they are not ment for other functions
+
+/* Recursivly find the node with exce same size as size
+   Retruns the pointer that points to the node */
+Block **find_node_size (Block **nodePointer, int size);
+
+/* Find the first node that the size is lager than size */
+Block **find_node_larger (Block **nodePointer, int size);
+
+/* Spiltting the large block to the wanted size
+   return the pointer that points to the remining block */
+Block *split_large_block (Block **nodePointerAddr, int sizeWanted);
+
+/* Putting the block into the allocated_list */
+void *alloc_to_list (Block **nodePointerAddr, Block *nextNodePointer);
+
+/* Distroy node of the freelist and allocated_list */
+void distroy_node (Block *nodeToDistroy);
+
+// The smalloc funtion
+/***************************************************************************
+  Takes nbytes and allocated space
+  also add the allcoated memory to the allocated_list
+  
+  Returns:
+  - NULL, if failed
+  - address of allocated memory 
+****************************************************************************/
+void *smalloc(unsigned int nbytes) {
+  Block **nodePointerAddr, *nextNodePointer;
+  void *memoryAddress;
+  printf ("Calling smalloc\n");
+  nodePointerAddr = find_node_size (&freelist, nbytes);
+  
+  if (nodePointerAddr == NULL) {
+    nodePointerAddr = find_node_larger (&freelist, nbytes);
+    if (nodePointerAddr == NULL) {
+      return NULL;
+    }
+    nextNodePointer = split_large_block (nodePointerAddr, nbytes);
+  }
+  else {
+    nextNodePointer = (*nodePointerAddr)->next;
+  }
+  memoryAddress = alloc_to_list (nodePointerAddr, nextNodePointer);
+  return memoryAddress;
+}
+
+/* Recursivly find the node with exce same size as size
+   Retruns the pointer that points to the node */
+Block **find_node_size (Block **nodePointer, int size) {  
+  if ((*nodePointer)->size == size) {
+    return nodePointer;
+  }
+  
+  if ((*nodePointer)->next != NULL) {
+    return find_node_size (&((*nodePointer)->next), size);
+  }
+  else {
+    return NULL;
+  }    
+}
+
+/* Find the first node that the size is lager than size */
+Block **find_node_larger (Block **nodePointer, int size) {  
+  if ((*nodePointer)->size > size) {
+    return nodePointer;
+  }
+  
+  if ((*nodePointer)->next != NULL) {
+    return find_node_size (&((*nodePointer)->next), size);
+  }
+  else {
+    return NULL;
+  }    
+}
+
+/* Spilt large block
+   Returns the address of the reminder block */
+Block *split_large_block (Block **nodePointerAddr, int sizeWanted) {
+  printf ("Calling spilt_large_block\n");
+
+  Block *newBlock;
+  newBlock = malloc (sizeof (Block));
+  newBlock->size = sizeWanted;
+  newBlock->addr = (*nodePointerAddr)->addr;
+  newBlock->next = *nodePointerAddr;
+
+  (*nodePointerAddr)->addr = (*nodePointerAddr)->addr + sizeWanted;
+  (*nodePointerAddr)->size = (*nodePointerAddr)->size - sizeWanted;
+  
+  *nodePointerAddr = newBlock;
+
+  return newBlock->next;
+}
+
+
+/**************************************************************
+   Putting the block into the allocated_list 
+   Returns the address of the memory */
+void *alloc_to_list (Block **nodePointerAddr, Block *nextNodePointer) {
+  printf ("Calling alloc_to_list\n");
+  Block *tempPointer;
+  tempPointer = allocated_list;
+
+  allocated_list = *nodePointerAddr;
+  *nodePointerAddr = nextNodePointer;
+
+  allocated_list->next = tempPointer;
+  return (allocated_list->addr);  
+}
+
+// The sfree function
+/****************************************************************************
+  Takes the address of the allocated memory and free it by putting it 
+  back to the freelist.
+
+  Returns:
+  - 0 if sucessfully putting the address back to the freelist
+  - -1 if can't find the address in the allocated_list
+    either because it is not allocated or it is not in the mem 
+*****************************************************************************/
+int sfree(void *memoryAddr) {
+  return -1;
+}
+
+
+/* Initialize the memory space used by smalloc,
+ * freelist, and allocated_list
+ * Note:  mmap is a system call that has a wide variety of uses.  In our
+ *        case we are using it to allocate a large region of memory. 
+ * - mmap returns a pointer to the allocated memory
+ * Arguments:
+ * - NULL: a suggestion for where to place the memory. We will let the 
+ *         system decide where to place the memory.
+ * - PROT_READ | PROT_WRITE: we will use the memory for both reading
+ *         and writing.
+ * - MAP_PRIVATE | MAP_ANON: the memory is just for this process, and 
+ *         is not associated with a file.
+ * - -1: because this memory is not associated with a file, the file 
+ *         descriptor argument is set to -1
+ * - 0: only used if the address space is associated with a file.
+ */
+
+/* NOTE: this function is incomplete */
+
+/*********************************************************************************
+  The mem pointer, first block of freelist pointer and first block of allocated_list pointer
+  is already created.
+
+  For my part initalize freelist and allocated_list pointer
+
+  Does not return
+********************************************************************************/
+
+void mem_init(int size) {
+  if ((mem = malloc (sizeof (mmapBlock))) == NULL) {
+    perror ("mem");
+    exit (1);
+  }
+    // Using mmap to initialize the free block space
+  mem->addr = mmap(NULL, size,  PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
+
+  // Error checking the mmap initialized space if failed
+  if (mem == MAP_FAILED) {
+    perror ("mmap");
+    exit (1);
+  }
+
+  mem->size = size;
+
+  // Initialize freelist
+  if ((freelist = malloc (sizeof (Block))) == NULL) {
+    perror ("Initialze freelist");
+    exit (1);
+  }
+
+  freelist->addr = mem->addr;
+  freelist->size = size;
+  freelist->next = NULL;
+
+  // Initialize allocated_list
+  allocated_list = NULL;
+}
+
+
+void mem_clean(){
+  // Recusivlly freeing all of the allocated_list node
+  distroy_node (allocated_list);
+  
+  // Recursivly freeing all of the freelist node
+  distroy_node (freelist);
+  
+  // Freeing the block space form mmap
+  if (munmap (mem->addr, mem->size) == -1) {
+    perror ("munmap");
+    exit (1);
+  }
+
+  free (mem);
+  mem = NULL;
+  /*mem->addr = NULL;
+    mem->size = 0;*/
+}
+
+/*************************************************************
+  Recusively distroy the nodes.
+**************************************************************/
+void distroy_node (Block *nodeToDistroy) {
+  if (! nodeToDistroy){
+    return;
+  }
+
+  distroy_node (nodeToDistroy->next);
+
+  free (nodeToDistroy);
+  nodeToDistroy = NULL;
+}
+  
+
+  

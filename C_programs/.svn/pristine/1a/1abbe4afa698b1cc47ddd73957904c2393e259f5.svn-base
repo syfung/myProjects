@@ -1,0 +1,15 @@
+FLAG = -Wall -w -O -g
+
+all : simpletest
+
+simpletest : simpletest.o smalloc.o testhelpers.o
+	gcc ${FLAG} -o $@ $^
+
+%.o : %.c smalloc.h
+	gcc ${FLAG} Z -c $<
+
+clearBiuld:
+	rm *.o 
+
+clean : 
+	rm simpletest *.o

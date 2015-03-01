@@ -1,0 +1,154 @@
+/********************************************************************
+ * The goal of this function is to inplment a a set of sunction to  *
+ * create and mantain a dynmamiclly allocated stack structure       *
+ *                                                                  *
+ *  I am thinking it might allocate memory every push               *   
+ *   Start date: Febuery 6th, 2015 By Joshua See Yui Fung           *
+ ********************************************************************/
+// Here includes header files
+# include <stdio.h>
+# include <stdlib.h>
+
+// Here includes the custom header files
+
+// Here define micro
+/******************************************************************** 
+ This is the max size this program will let people to init
+*******************************************************************/
+# define MAX_SIZE 100000
+# define MALLOC_SIZE 20
+
+// We are giving the type of element a generic name
+typedef int stackElement;
+
+// Here is the struc defintion
+/**************************************************************
+   The stackContent is the actual stack data
+   The stackTop is how much element is in this data stack
+   The size is the max siz of this stack defined from init
+**********************************************************/
+struct stack {
+  stackElement *stackContent;
+  int stackTop;
+  int stackSize;
+  int topCounter;
+  int mallocTracker;
+};
+
+typedef struct stack stackStruct;
+
+// Here list the function prtoype that might move to the header files
+stackStruct *StackInit (int max_size);
+
+void StackDestroy (stackStruct *stackStruct_1);
+
+int StackMallocIncrease (stackStruct *stackStruct_1);
+
+//int StackMallocDecrease (stackStruct *stackStruct_1);
+
+int StackPush (stackStruct *stackStruct_1, stackElement elementToPush);
+
+//stackElement StackPop (stackStruct *stackStruct_1);
+
+//int StackIsEmty (stackStruct *stackStruct_1);
+
+//int StackIsFull (stackStruct *stackStruct_1);
+ 
+
+
+// Main starts here, at the moment use this to test your stack
+int main (int argc, char **argv) {
+  stackStruct *stack_a;
+  int size_a;
+  printf ("Please enter the size you want to init:");
+  scanf ("%d", &size_a);
+  fflush (stdin);
+  
+  if ((stack_a = StackInit (size_a)) == NULL) {
+    exit (1);
+  }
+  
+  printf ("%d,%d,%d\n", stack_a->stackTop, stack_a->stackSize, stack_a->mallocTracker);
+  
+  while (getchar() != 'q'){
+    StackPush (stack_a, 20);
+    printf ("%d,%d,%d", stack_a->stackTop, stack_a->stackSize, stack_a->mallocTracker);
+  }
+  StackDestroy (stack_a);
+  
+  stack_a = NULL;
+  return 0;
+}
+
+// Functions
+
+// StackInit ()
+/*** Initialize the stack memory space ***/
+stackStruct *StackInit (int max_size) {
+  //stackStruct->stackContent = malloc (sizeof (stackElement))
+  if (max_size > MAX_SIZE) {
+    printf ("The size of the init size is greater than the max size: %d\n", MAX_SIZE);
+    return NULL;
+  }
+  stackStruct *stackStruct_1;
+  stackStruct_1 = malloc (sizeof (stackStruct));
+  // Marking the top as not existing
+  stackStruct_1->stackTop = -1;
+  stackStruct_1->stackSize = max_size;
+  stackStruct_1->mallocTracker = 0;
+  stackStruct_1->topCounter = MALLOC_SIZE;
+  return stackStruct_1;
+}
+
+// StackMalloc ()
+/*** Allocate 20 more space or up to stackSize ***/
+int StackMallocIncrease (stackStruct *stackStruct_1) {
+  int top = stackStruct_1->stackTop;
+  if (top == stackStruct_1->stackSize) {
+    printf ("Stack is full\n");
+    return -1; 
+  }
+  
+  if (1) {
+    stackStruct_1->stackContent = realloc (stackStruct_1->stackContent, sizeof (stackElement) * (top + MALLOC_SIZE));
+    stackStruct_1->mallocTracker += MALLOC_SIZE;
+  }
+  else {
+    stackStruct_1->stackContent = realloc (stackStruct_1->stackContent, sizeof (stackElement) * stackStruct_1->stackSize );
+    stackStruct_1->mallocTracker = stackStruct_1->stackSize;
+  }
+  
+  return 0;
+}
+
+//int StackMallocDecrease (stackStruct *stackStruct_1);
+  
+// StackDestroy ()
+/*** Freeing the stack ***/
+/************************************************
+    free the content, than free the stack struct
+*******************************************/
+void StackDestroy (stackStruct *stackStruct_1) {
+  free (stackStruct_1->stackContent);
+  free (stackStruct_1);
+}
+
+// StackPush ()
+int StackPush (stackStruct *stackStruct_1, stackElement elementToPush) {
+  if (stackStruct_1->topCounter == MALLOC_SIZE) {
+    StackMallocIncrease (stackStruct_1);
+    stackStruct_1->topCounter = 0;
+    printf ("Mallocate memory\n");
+  }
+  stackStruct_1->stackTop ++;
+  stackStruct_1->topCounter ++;
+  *(stackStruct_1->stackContent + stackStruct_1->stackTop) = elementToPush;
+  return 0;
+}
+    
+
+// StackPop ()
+
+// StackIsEmty ()
+
+

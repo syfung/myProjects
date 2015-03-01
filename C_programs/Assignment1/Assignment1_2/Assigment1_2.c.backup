@@ -1,0 +1,171 @@
+// *Assignment 1 part 2, this program will take a .wav file
+// *Take input: delay and volume_scale
+// *Create a new file that has the original file and the delaied
+// *volume_scaled echo mixed together
+
+/* **************************************************
+   By Joshua Fung -- January 22nd, 2015
+**************************************************/
+# include <stdio.h>
+# include <stdlib.h>
+# include <unistd.h>
+
+
+int main (int argc, char **argv) {
+
+  //This section of the code reads the inputs and check
+  extern char *optarg;
+  extern int optind, opterr, optopt;
+  opterr = 0;
+  char optflag, *optset = {"-d:-v:"}; 
+  int delay = -1, volume_scale = -1;
+
+  while ( optind < argc-2){
+    optflag = getopt (argc, argv, optset);
+
+    switch(optflag){
+
+    case 'd':
+      delay = strtol(optarg, NULL, 10);
+      break;
+
+    case 'v':
+      volume_scale = strtol(optarg, NULL, 10);
+      break;
+
+    default:
+      printf ("Unknow input\n");
+      printf ("addecho [-d delay] [-v volume_scale] sourcewav destwav\n");
+      exit(1);
+      break;
+    }
+  }
+
+  //Check delay and volume_scale if not provided use default
+  // delay = 8000, volume_scale = 4
+  if (delay < 0){
+    printf ("No delay argument inputed, use default: 8000\n");
+    delay = 8000;
+  }
+  if (volume_scale < 0){
+    printf ("No volume scale argument inputed, use default: 4\n");
+    volume_scale = 4;
+  }
+
+  //Checking value of delay and volume_scale
+  printf ("Delay: %d, Volume Scale: %d\n", delay, volume_scale);
+	
+  //Open file and check
+  FILE *openFile, *newFile;
+  if ((openFile = fopen(argv[argc-2], "r")) == NULL){
+      perror ("Input file");
+      printf ("addecho [-d delay] [-v volume_scale] sourcewav destwav\n");
+      exit (1);
+    }
+  if ((newFile = fopen(argv[argc-1], "w")) == NULL){
+      perror ("Output file");
+      printf ("addecho [-d delay] [-v volume_scale] sourcewav destwav\n");
+      exit (1);
+    }
+
+  //Fiding data block size
+  int oldFileSize = 0;
+  fseek (openFile, 4, SEEK_SET);
+  fread (&oldFileSize, 4, 1, openFile);
+  
+  //Check if file is stereo
+  int monoOrStereo = 0;
+  fseek (openFile, 22, SEEK_SET);
+  fread (&monoOrStereo, 2, 1, openFile);
+  if (monoOrStereo != 1){
+    printf("The input file is not mono.\n");
+    exit (1);
+  }
+  
+  //This section checks the size of each sample
+  int sampleSize = 0;
+  fseek (openFile, 34, SEEK_SET);
+  fread (&sampleSize, 2, 1, openFile);
+  
+  int sampleSize_bytes;
+  sampleSize_bytes= sampleSize / 8;
+  printf("%d, %d\n", sampleSize, sampleSize_bytes);
+  fseek (openFile, 0, SEEK_SET);
+
+  //We will try to loop through the data set
+  short *delayBuffer, *reader;
+  int i = 0, j = 0; 
+  delayBuffer = malloc (delay * (sampleSize_bytes));
+  reader = malloc (sampleSize_bytes);
+
+  int newFileSize = (oldFileSize + (delay * 2));
+  printf("%x,%d",newFileSize, newFileSize);
+  int newDatablockSize = (oldFileSize + (delay * 2) - 44);
+  printf(" %x,%d\n",newDatablockSize, newDatablockSize);
+
+  
+  while ((fread(reader, sampleSize_bytes, 1, openFile)) != 0) {
+    if (ftell(openFile) == 6){
+      fwrite (&newFileSize, 4, 1, newFile);
+      fread(reader, sampleSize_bytes, 1, openFile);
+      printf("%ld, %ld write size 4 \n", ftell(openFile), ftell(newFile));
+    }
+    else if (ftell(openFile) == 42){
+      fwrite (&newDatablockSize, 4, 1, newFile);
+      fread(reader, sampleSize_bytes, 1, openFile);
+      printf("%ld, %ld write size 40\n", ftell(openFile), ftell(newFile));
+    }
+    else if (ftell(openFile) >= 44){
+      fwrite (reader, 2, 1, newFile);
+      *(delayBuffer + i) = *reader;
+      printf("%ld, %ld\n", ftell(openFile), ftell(newFile));
+
+      if (i == (delay * sampleSize_bytes)){
+	i = 0;
+      }
+      else{
+	i++;
+      }
+    }
+    else {
+      if (ftell(openFile) > (delay * sampleSize_bytes) + 44){
+	*reader = *reader + *(delayBuffer + j);
+	fwrite (reader, 2, 1, newFile);
+	printf("%ld, %ld, %d\n", ftell(openFile), ftell(newFile), (unsigned short)*(delayBuffer + j));
+      
+	if (j == (delay * sampleSize_bytes)){
+	  j = 0;
+	}
+	else{
+	  j++;
+	}
+      }
+
+      
+	  
+      else {
+	fwrite (reader, 2, 1, newFile);
+	printf("%ld, %ld <44\n", ftell(openFile), ftell(newFile));
+
+      }
+    }
+  }
+
+  printf("%d, %d\n", i, j);
+
+  fwrite (delayBuffer, 1, (delay * sampleSize_bytes), newFile);
+  printf("%ld, %ld <44\n", ftell(openFile), ftell(newFile));
+  
+  /*//Fiding data block size
+    int fileSize = 0;
+    fseek (openFile, 40, SEEK_SET);
+    fread (&fileSize, 4, 1, openFile);
+  */
+
+  
+  
+  fclose(openFile);
+  fclose(newFile);
+
+  return 0;
+}

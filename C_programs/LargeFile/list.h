@@ -1,0 +1,2 @@
+
+void increment (int *a);

@@ -1,0 +1,17 @@
+# This is a makefile use by make 
+FLAGS = -g -Wall 
+
+# To work it needs the main section
+all : main
+
+# To work it needs the object file 
+main : main.o Functions.o
+# To get the object files it run this command
+		gcc ${FLAGS} -o $@ $^
+
+# Taking all of the object file and link them, make sure the header file is here
+%.o : %.c Functions.h
+		gcc ${FLAGS} -c $<
+
+clean :
+		rm *.o main
