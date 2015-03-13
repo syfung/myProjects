@@ -1,1 +1,1 @@
- 
+This project based on the instruction that I took from a friend from University of Toronto CSC209. The idea is to implement a shell. For now it will be called miniShell or myShell. The starter code provides code for the prompting and  

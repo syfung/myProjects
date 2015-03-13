@@ -1,4 +1,4 @@
-CFLAGS = -g -Wall
+CFLAGS = -g -Wall -w -O
 DEPS = shell.h parser.h
 
 shell: shell.o parser.o
