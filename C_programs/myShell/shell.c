@@ -103,8 +103,11 @@ int execute_cd(char** words) {
    * - If so, return an EXIT_FAILURE status to indicate something is 
    *   wrong.
    */
-
-
+  if (words == NULL || words[0] == NULL ||\
+      words[1] == NULL || strcmp(words[0],"cd")) {
+    printf("EXIT_FAILURE\n");
+    return EXIT_FAILURE;
+  }
 
   /**
    * TODO: 
@@ -118,6 +121,20 @@ int execute_cd(char** words) {
    * Hints: see chdir and getcwd man pages.
    * Return the success/error code obtained when changing the directory.
    */
+
+  if (is_relative(words[1])) {
+    printf("Changing directry with relative path\n");
+    char cwd[MAX_DIRNAME];
+    getcwd(cwd,MAX_DIRNAME-1);
+    strcat(cwd,"/");
+    strcat(cwd,words[1]);
+    printf("%s\n", cwd);
+    return chdir(cwd);
+  }
+  else {
+    printf("Changing directry with absolute path\n");
+    return chdir(words[1]);
+  }
 	 
 }
 
@@ -197,11 +214,13 @@ int execute_simple_command(simple_command *cmd) {
   /* Check if it is a builtin command */
   switch (cmd->builtin) {
   case BUILTIN_CD:
+    printf("case cd\n");
     return execute_cd(cmd->tokens);
   case BUILTIN_EXIT:
     /* This is changed to return -1 instead of exit(0) because 
-     * I want it to go through release_command
+     * I want it to go through release_command()
      */
+    // exit(0);
     return -1;
   }
 
@@ -213,7 +232,7 @@ int execute_simple_command(simple_command *cmd) {
   }
   else if (pid > 0) {
     wait(&status);
-    printf("Simple parent\n");
+    printf("Simple parent, done waiting child\n");
  
   }
   else {
