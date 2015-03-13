@@ -1,0 +1,17 @@
+function cat(colour, sex, emotion, fullness) {
+    colour: colour,
+    sex: sex,
+    emotion: emotion,
+    fullness: fullness
+    play: function(){
+	if (this.emotion === "happy"){
+	    console.log("enjory playing");
+	}
+    }
+
+    
+
+    var pets[1] = new cat("black", "male", "happy", "full");
+
+    cat.play;
+
