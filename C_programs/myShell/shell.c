@@ -200,7 +200,9 @@ int execute_simple_command(simple_command *cmd) {
   case BUILTIN_CD:
     return execute_cd(cmd->tokens);
   case BUILTIN_EXIT:
-    //exit(0);
+    /* This is changed to return -1 instead of exit(0) because 
+     * I want it to go through release_command
+     */
     return -1;
   }
 
