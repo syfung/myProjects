@@ -87,9 +87,17 @@ disp(A_qr)
 
 %% Question 2, Newtoon-Raphson method
 
-syms t1 t2;
+syms t2_t1;
 gamma = 5/3;
-eta(t1,t2) = (log(t2/t1) - (1-(t1/t2))) / (log(t2/t1)+(1-(t1/t2))/(gamma-1));
+eta(t2_t1) = (log(t2_t1) - (1-((t2_t1)^-1)))/...
+    (log(t2_t1)+(1-((t2_t1)^-1))/(gamma-1));
 
+etaAt30(t2_t1) = eta(t2_t1);
 
+double(eta(1.5))
+etaAt30(0.5)
+t2_t1_ans = 2;
+for i = 1:20
+    t2_t1_ans = t2_t1_ans - ((etaAt30(t2_t1_ans))/diff(etaAt30(t2_t1_ans)))
+end
 
