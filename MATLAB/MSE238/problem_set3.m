@@ -78,9 +78,18 @@ fprintf('Eigenvectors\n');
 disp(eigenVec);
 
 %% QR Factorization
-A_qr = OA';
+A_qr = OA;
 for i = 1:20
     [q,R] = qr(A_qr);
     A_qr = R * q;
 end
 disp(A_qr)
+
+%% Question 2, Newtoon-Raphson method
+
+syms t1 t2;
+gamma = 5/3;
+eta(t1,t2) = (log(t2/t1) - (1-(t1/t2))) / (log(t2/t1)+(1-(t1/t2))/(gamma-1));
+
+
+
