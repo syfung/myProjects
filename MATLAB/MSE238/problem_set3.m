@@ -8,11 +8,12 @@ clear all;
 close all;
 format compact;
 
-OA = [4,-1,1;
-      -1,2,-2;
-      1,-2,4];
+OA = [80,-50,-30,0;
+      -50,100,-10,-25;
+      -30,0,65,-20;
+      0,-25,-20,100];
   
-OB = [12;-1;5];
+OB = [-120,0,0,0]';
 
 A = OA;
 B = OB;
@@ -23,10 +24,12 @@ if m ~= n
 end
 
 %% Matrix Inversion
+fprintf('Slove by MATLAB\n');
 x_mi = A\B;
 disp(x_mi');
 
 %% Gauss Elimination
+fprintf('Slove by gauss elimination\n');
 upper = zeros(size(A));
 upper_B = zeros (size(B));
 
@@ -52,10 +55,11 @@ end
 disp(x_ge')
 
 %% Gauss-Siedel
+fprintf('Slove by gauss siedel\n');
 x_gs = zeros (1,n);
 diff_B_Ax = zeros(size(OB));
 
-for k = 1 : 20
+for k = 1 : 30
     for i = 1 : n
         diff_B_Ax (i) = OB (i);
         for j = 1 : n
@@ -87,17 +91,24 @@ disp(A_qr)
 
 %% Question 2, Newtoon-Raphson method
 
-syms t2_t1;
+%syms t2_t1;
+syms x
 gamma = 5/3;
-eta(t2_t1) = (log(t2_t1) - (1-((t2_t1)^-1)))/...
-    (log(t2_t1)+(1-((t2_t1)^-1))/(gamma-1));
+eta = @(t2_t1) ((log(t2_t1) - (1-((t2_t1)^-1)))/(log(t2_t1)+(1-((t2_t1)^-1))/(gamma-1)));
 
-etaAt30(t2_t1) = eta(t2_t1);
+etaAt30 = @(t2_t1) eta(t2_t1) - 0.3;
 
-double(eta(1.5))
-etaAt30(0.5)
-t2_t1_ans = 2;
+%diffeq = char(diff(etaAt30(x)));
+
+diffEtaAt30 = @(t2_t1) (1/t2_t1 - 1/t2_t1^2)/(log(t2_t1) - 3/(2*t2_t1) + 3/2)...
+   - ((1/t2_t1 + 3/(2*t2_t1^2))*(log(t2_t1) + 1/t2_t1 - 1))/(log(t2_t1) - 3/(2*t2_t1) + 3/2)^2;
+
+t2_t1_ans = 4;
+
 for i = 1:20
-    t2_t1_ans = t2_t1_ans - ((etaAt30(t2_t1_ans))/diff(etaAt30(t2_t1_ans)))
+    t2_t1_ans = t2_t1_ans - ((etaAt30(t2_t1_ans)) / diffEtaAt30(t2_t1_ans));
 end
+
+fprintf('T2/T1 where eta = 0.3:')
+disp(t2_t1_ans);
 
