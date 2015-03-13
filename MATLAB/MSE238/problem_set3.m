@@ -68,3 +68,19 @@ for k = 1 : 20
 end
 
 disp(x_gs);
+
+%% MATLAB Eigenvalues Eigenvectors
+[eigenVec, eigenVal] = eig(OA);
+
+fprintf('Eigenvalues\n');
+disp(eigenVal);
+fprintf('Eigenvectors\n');
+disp(eigenVec);
+
+%% QR Factorization
+A_qr = OA';
+for i = 1:20
+    [q,R] = qr(A_qr);
+    A_qr = R * q;
+end
+disp(A_qr)
