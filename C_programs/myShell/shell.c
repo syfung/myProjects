@@ -192,6 +192,25 @@ int execute_nonbuiltin(simple_command *s) {
    *   function above).
    * This function returns only if the execution of the program fails.
    */
+  
+  if (s->in != NULL) {
+    int file_des_in = open(s->in, O_RDONLY);
+    dup2(file_des_in, fileno(stdin));
+    close(file_des_in);
+  }
+  if (s->out != NULL) {
+    int file_des_out = open(s->out, O_WRONLY | O_CREAT | O_TRUNC,\
+			    S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    dup2(file_des_out, fileno(stdout));
+    close(file_des_out);
+  }
+  if (s->err != NULL) {
+    int file_des_err = open(s->err, O_WRONLY | O_CREAT | O_TRUNC,\
+			    S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    dup2(file_des_err, fileno(stderr));
+    close(file_des_err);
+  }
+  
   return execute_command(s->tokens);
 
 }
