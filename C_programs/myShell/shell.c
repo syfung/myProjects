@@ -148,7 +148,6 @@ int execute_command(char **tokens) {
    * Function returns only in case of a failure (EXIT_FAILURE).
    */
 
-sdffffffffffffff
 }
 
 
@@ -206,10 +205,11 @@ int execute_simple_command(simple_command *cmd) {
     return -1;
   }
 
+  /* Forking a child process to execute the nonbuiltin command, the function should exit the child */ 
   int pid, status;
   if ((pid = fork()) == 0) {
     printf("Simple child\n");
-   return execute_nonbuiltin(cmd);
+    return execute_nonbuiltin(cmd);
   }
   else if (pid > 0) {
     wait(&status);
