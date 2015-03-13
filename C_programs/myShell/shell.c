@@ -200,7 +200,8 @@ int execute_simple_command(simple_command *cmd) {
   case BUILTIN_CD:
     return execute_cd(cmd->tokens);
   case BUILTIN_EXIT:
-    exit(0);
+    //exit(0);
+    return -1;
   }
 
   int pid, status;
