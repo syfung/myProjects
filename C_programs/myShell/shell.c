@@ -105,7 +105,7 @@ int execute_cd(char** words) {
    */
   if (words == NULL || words[0] == NULL ||\
       words[1] == NULL || strcmp(words[0],"cd")) {
-    printf("EXIT_FAILURE\n");
+    printf("EXIT_FAILURE: %d\n",EXIT_FAILURE);
     return EXIT_FAILURE;
   }
 
@@ -165,6 +165,13 @@ int execute_command(char **tokens) {
    * Function returns only in case of a failure (EXIT_FAILURE).
    */
 
+  if (execvp(tokens[0],tokens) == -1) {
+    fprintf(stderr,"Command no find: ");
+    perror(tokens[0]);
+    return EXIT_FAILURE;
+  }
+  
+  exit(0);
 }
 
 
@@ -185,12 +192,7 @@ int execute_nonbuiltin(simple_command *s) {
    *   function above).
    * This function returns only if the execution of the program fails.
    */
-  if (strcmp(*(s->tokens), "bad") == 0) {
-    return -1;
-  }
-  else {
-    exit(0);
-  }
+  return execute_command(s->tokens);
 
 }
 
@@ -236,7 +238,7 @@ int execute_simple_command(simple_command *cmd) {
  
   }
   else {
-    perror("fork, simple_command");
+    perror("fork, simple_command()");
     exit(1);
   }
 
