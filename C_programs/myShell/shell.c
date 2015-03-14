@@ -193,12 +193,16 @@ int execute_nonbuiltin(simple_command *s) {
    */
 
   printf("Execute_nonbuiltin\n");
+
+  /* Redirecting stdin */
   if (s->in != NULL) {
     printf("Redirecting stdin\n");
     int file_des_in = open(s->in, O_RDONLY);
     dup2(file_des_in, fileno(stdin));
     close(file_des_in);
   }
+
+  /* Redirecting stdout */
   if (s->out != NULL) {
     printf("Redirecting stdout\n");
     int file_des_out = open(s->out, O_WRONLY | O_CREAT | O_TRUNC,\
@@ -206,6 +210,8 @@ int execute_nonbuiltin(simple_command *s) {
     dup2(file_des_out, fileno(stdout));
     close(file_des_out);
   }
+
+  /* Redirecting stderr */
   if (s->err != NULL) {
     printf("Redirecting stderr\n");
     int file_des_err = open(s->err, O_WRONLY | O_CREAT | O_TRUNC,\
@@ -213,7 +219,8 @@ int execute_nonbuiltin(simple_command *s) {
     dup2(file_des_err, fileno(stderr));
     close(file_des_err);
   }
-  
+
+  /* Execeuting the command, only return if failed */  
   return execute_command(s->tokens);
 
 }
