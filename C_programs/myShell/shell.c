@@ -165,13 +165,12 @@ int execute_command(char **tokens) {
    * Function returns only in case of a failure (EXIT_FAILURE).
    */
 
+  /* The exec program should exit itself */
   if (execvp(tokens[0],tokens) == -1) {
     fprintf(stderr,"Command no find: ");
     perror(tokens[0]);
     return EXIT_FAILURE;
   }
-  
-  exit(0);
 }
 
 
@@ -192,7 +191,8 @@ int execute_nonbuiltin(simple_command *s) {
    *   function above).
    * This function returns only if the execution of the program fails.
    */
-  
+
+  printf("Execute_nonbuiltin\n");
   if (s->in != NULL) {
     printf("Redirecting stdin\n");
     int file_des_in = open(s->in, O_RDONLY);
@@ -241,26 +241,27 @@ int execute_simple_command(simple_command *cmd) {
     printf("case cd\n");
     return execute_cd(cmd->tokens);
   case BUILTIN_EXIT:
-    /* This is changed to return -1 instead of exit(0) because 
-     * I want it to go through release_command()
-     */
-    // exit(0);
-    return -1;
+    printf("case exit\n");
+    exit(0);
   }
 
   /* Forking a child process to execute the nonbuiltin command, the function should exit the child */ 
   int pid, status;
   if ((pid = fork()) == 0) {
+    
     printf("Simple child\n");
+    
     return execute_nonbuiltin(cmd);
   }
   else if (pid > 0) {
-    wait(&status);
+    waitpid(pid,&status,0);
+    
     printf("Simple parent, done waiting child\n");
+    printf("pid: %d, exit status: %d\n", pid,WEXITSTATUS(status));
  
   }
-  else {
-    perror("fork, simple_command()");
+  else {    
+    perror("fork, simple_command()");    
     exit(1);
   }
 
@@ -285,6 +286,7 @@ int execute_complex_command(command *c) {
    */
 
   if (c->scmd) {
+    printf("Executing nonbuilting in complex command\n");
     return execute_nonbuiltin(c->scmd);
   }
 
@@ -333,24 +335,43 @@ int execute_complex_command(command *c) {
     int comStatus;
 
     if ((pid = fork()) == 0) {
+      /* Linking the pipe as stdout */
       close(pfd[0]);
       close(stdout);
       dup2(pfd[1],fileno(stdout));
+      
       execute_complex_command(c->cmd1);
+      printf("This shouldn't do anything\n");
+      exit(0);
     }
     else if (pid > 0) {
       int pid2, status2;
       if ((pid2 = fork()) == 0) {
+	/* Linking the pipe as stdin */
 	close(pfd[1]);
 	close(stdin);
 	dup2(pfd[0],fileno(stdin));
-	wait(&comStatus);
+	
+	waitpid(pid,&comStatus,0);
+	
+	printf("Done waiting: %d ", pid);
+	printf("Exit status of cmd1: %d\n", WEXITSTATUS(comStatus));
+	
 	execute_complex_command(c->cmd2);
+	close(pfd[0]);
+
+	/* Exiting the extra parent */
+	exit(0);
       }  
       else if (pid2 > 0) {
 	close(pfd[0]);
 	close(pfd[1]);
-	wait(&status2);
+	
+	waitpid(pid,&comStatus,0);
+	waitpid(pid2,&status2,0);
+	
+	printf("Done waiting: %d\n", pid2);
+	printf("pid: %d, exit status: %d\n", pid2,WEXITSTATUS(status2));
       }
     }
     else {
