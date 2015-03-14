@@ -194,17 +194,20 @@ int execute_nonbuiltin(simple_command *s) {
    */
   
   if (s->in != NULL) {
+    printf("Redirecting stdin\n");
     int file_des_in = open(s->in, O_RDONLY);
     dup2(file_des_in, fileno(stdin));
     close(file_des_in);
   }
   if (s->out != NULL) {
+    printf("Redirecting stdout\n");
     int file_des_out = open(s->out, O_WRONLY | O_CREAT | O_TRUNC,\
 			    S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     dup2(file_des_out, fileno(stdout));
     close(file_des_out);
   }
   if (s->err != NULL) {
+    printf("Redirecting stderr\n");
     int file_des_err = open(s->err, O_WRONLY | O_CREAT | O_TRUNC,\
 			    S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     dup2(file_des_err, fileno(stderr));
@@ -280,8 +283,10 @@ int execute_complex_command(command *c) {
    * Execute nonbuiltin commands only. If it's exit or cd, you should not 
    * execute these in a piped context, so simply ignore builtin commands. 
    */
-	
 
+  if (c->scmd) {
+    return execute_nonbuiltin(c->scmd);
+  }
 
   /** 
    * Optional: if you wish to handle more than just the 
@@ -298,6 +303,11 @@ int execute_complex_command(command *c) {
      * creating the pipe.
      */
 
+    int pfd[2], pid;
+    if (pipe(pfd) != 0) {
+      perror("pipe execute_complex_command()");
+      return -1;
+    }
 			
     /**
      * TODO: Fork a new process.
@@ -320,6 +330,33 @@ int execute_complex_command(command *c) {
      *     - close both ends of the pipe. 
      *     - wait for both children to finish.
      */
+    int comStatus;
+
+    if ((pid = fork()) == 0) {
+      close(pfd[0]);
+      close(stdout);
+      dup2(pfd[1],fileno(stdout));
+      execute_complex_command(c->cmd1);
+    }
+    else if (pid > 0) {
+      int pid2, status2;
+      if ((pid2 = fork()) == 0) {
+	close(pfd[1]);
+	close(stdin);
+	dup2(pfd[0],fileno(stdin));
+	wait(&comStatus);
+	execute_complex_command(c->cmd2);
+      }  
+      else if (pid2 > 0) {
+	close(pfd[0]);
+	close(pfd[1]);
+	wait(&status2);
+      }
+    }
+    else {
+      perror("fork, simple_command()");
+      exit(1);
+    }
 		
   }
   return 0;
