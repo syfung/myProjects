@@ -26,7 +26,7 @@ int execute_cd(char** words);
 int execute_nonbuiltin(simple_command *s);
 int execute_simple_command(simple_command *cmd);
 int execute_complex_command(command *cmd);
-
+int chained_pipe_command(command *cmd);
 
 int main(int argc, char** argv) {
 	
@@ -227,15 +227,19 @@ int execute_complex_command(command *c) {
     return execute_nonbuiltin(c->scmd);
   }
 
-  /** 
-   * Optional: if you wish to handle more than just the 
-   * pipe operator '|' (the '&&', ';' etc. operators), then 
-   * you can add more options here. 
-   */
-
   if (!strcmp(c->oper, "|")) {
+    chained_pipe_command(c);
+  }
 
-    int pfd[2], pid;
+  else if (!strcmp(c->oper, ";")) {
+    ;
+  }
+  return 0;
+}
+
+
+int chained_pipe_command(command *c) {
+      int pfd[2], pid;
     if (pipe(pfd) != 0) {
       perror("pipe execute_complex_command()");
       return -1;
@@ -286,11 +290,5 @@ int execute_complex_command(command *c) {
       perror("fork, simple_command()");
       exit(1);
     }
-		
+    return 0;
   }
-
-  else if (!strcmp(c->oper, ";")) {
-    
-  }
-  return 0;
-}
