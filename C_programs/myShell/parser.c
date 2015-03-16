@@ -11,7 +11,7 @@ int is_operator(char *token) {
    * Optional: edit this if you wish to parse other operators
    * like ";", "&&", etc.
    */
-  return (strcmp(token, "|") == 0);
+  return (strcmp(token, "|") == 0 || strcmp(token, ";") == 0);
 }
 
 /* Determine if a command is builtin */

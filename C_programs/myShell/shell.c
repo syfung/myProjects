@@ -27,6 +27,7 @@ int execute_nonbuiltin(simple_command *s);
 int execute_simple_command(simple_command *cmd);
 int execute_complex_command(command *cmd);
 int chained_pipe_command(command *cmd);
+int chained_sequence_command(command *cmd);
 
 int main(int argc, char** argv) {
 	
@@ -232,7 +233,7 @@ int execute_complex_command(command *c) {
   }
 
   else if (!strcmp(c->oper, ";")) {
-    ;
+    chained_sequence_command(c);
   }
   return 0;
 }
@@ -258,13 +259,14 @@ int chained_pipe_command(command *c) {
       exit(0);
     }
     else if (pid > 0) {
+      
+      waitpid(pid,&comStatus,0);
+	
       if ((pid2 = fork()) == 0) {
 	/* Linking// the pipe as stdin */
 	close(pipe_fd[1]);
 	close(stdin);
 	dup2(pipe_fd[0],fileno(stdin));
-	
-	waitpid(pid,&comStatus,0);
 	
 	printf("Done waiting: %d ", pid);
 	printf("Exit status of cmd1: %d\n", WEXITSTATUS(comStatus));
@@ -276,10 +278,9 @@ int chained_pipe_command(command *c) {
 	exit(0);
       }  
       else if (pid2 > 0) {
-	close(pipe_fd[0]);
-	close(pipe_fd[1]);
-	
-	waitpid(pid,&comStatus,0);
+	close(pfd[0]);
+	close(pfd[1]);
+
 	waitpid(pid2,&status2,0);
 	
 	printf("Done waiting: %d\n", pid2);
@@ -292,3 +293,32 @@ int chained_pipe_command(command *c) {
     }
     return 0;
   }
+
+
+int chained_sequence_command(command *cmd) {
+  int pid, pid2, status1, status2;
+
+  if ((pid = fork()) == 0) {
+    execute_complex_command(cmd->cmd1);
+  }
+  else if (pid > 0) {
+    waitpid(pid, status1, 0);
+    if ((pid2 = fork()) == 0) {
+      execute_complex_command(cmd->cmd2);
+      exit(0);
+    }
+    else if (pid2 > 0) {
+      waitpid(pid2, status2, 0);
+      printf("sequence command parent done wting/n");
+    }
+    else {
+      perror("fork, sequemce_command");
+      exit(1);
+    }
+  }
+  else {
+      perror("fork, sequemce_command");
+      exit(1);
+  }
+  return 0;
+}
