@@ -21,7 +21,6 @@
 #define MAX_COMMAND 1024
 #define MAX_TOKEN 128
 
-/* Functions to implement, see below after main */
 int execute_cd(char** words);
 int execute_nonbuiltin(simple_command *s);
 int execute_simple_command(simple_command *cmd);
@@ -133,7 +132,6 @@ int execute_cd(char** words) {
  */
 int execute_command(char **tokens) {
 	
-
   /* The exec program should exit itself */
   if (execvp(tokens[0],tokens) == -1) {
     fprintf(stderr,"Command no find: ");
@@ -232,6 +230,10 @@ int execute_complex_command(command *c) {
     printf("Executing nonbuilting in complex command\n");
     return execute_nonbuiltin(c->scmd);
   }
+  
+  if (!c) {
+    exit(0);
+  }
 
   if (!strcmp(c->oper, "|")) {
     chained_pipe_command(c);
@@ -305,6 +307,10 @@ int chained_pipe_command(command *c) {
       printf("Done waiting: %d\n", pid2);
       printf("pid: %d, exit status: %d\n", pid2,WEXITSTATUS(status2));
     }
+    else {
+      perror("fork, sequemce_command");
+      exit(1);
+    }
   }
   else {
     perror("fork, simple_command()");
@@ -343,7 +349,32 @@ int chained_sequence_command(command *cmd) {
 }
 
 int chained_parallel_command(command *cmd) {
+  int pid, pid2, status1, status2;
+
+  if ((pid = fork()) == 0) {
+    execute_complex_command(cmd->cmd1);
+  }
+  else if (pid > 0) {
+    if ((pid2 = fork()) == 0) {
+      execute_complex_command(cmd->cmd2);    
+    }
+    else if (pid2 > 0) {  
+      waitpid(pid, status1, WNOHANG);
+      waitpid(pid2, status2, 0);
+      printf("Sequence command parent done wating\n");
+    }
+    else {
+      perror("fork, sequemce_command");
+      exit(1);
+    }
+  }
+  else {
+    perror("fork, sequemce_command");
+    exit(1);
+  }
+  return 0;
 }
+
 int chained_and_command(command *cmd) {
 }
 int chained_or_command(command *cmd) {
