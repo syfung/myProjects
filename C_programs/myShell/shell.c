@@ -65,6 +65,7 @@ int main(int argc, char** argv) {
 		
     /* Construct chain of commands, if multiple commands */
     command *cmd = construct_command(tokens);
+    printf("Done command construct\n");
     print_command(cmd, 0);
     
     int exitcode = 0;
@@ -252,59 +253,65 @@ int execute_complex_command(command *c) {
 
 
 int chained_pipe_command(command *c) {
-      int pfd[2], pid;
-    if (pipe(pfd) != 0) {
-      perror("pipe execute_complex_command()");
-      return -1;
-    }
-    
-    int comStatus, pid2, status2;
-
-    if ((pid = fork()) == 0) {
-      /* Linking the pipe as stdout */
-      close(pfd[0]);
-      close(stdout);
-      dup2(pfd[1],fileno(stdout));
-      
-      execute_complex_command(c->cmd1);
-      printf("This shouldn't do anything\n");
-      exit(0);
-    }
-    else if (pid > 0) {
-      
-      waitpid(pid,&comStatus,0);
-	
-      if ((pid2 = fork()) == 0) {
-	/* Linking the pipe as stdin */
-	close(pfd[1]);
-	close(stdin);
-	dup2(pfd[0],fileno(stdin));
-	
-	printf("Done waiting: %d ", pid);
-	printf("Exit status of cmd1: %d\n", WEXITSTATUS(comStatus));
-	
-	execute_complex_command(c->cmd2);
-	close(pfd[0]);
-
-	/* Exiting the extra parent */
-	exit(0);
-      }  
-      else if (pid2 > 0) {
-	close(pfd[0]);
-	close(pfd[1]);
-
-	waitpid(pid2,&status2,0);
-	
-	printf("Done waiting: %d\n", pid2);
-	printf("pid: %d, exit status: %d\n", pid2,WEXITSTATUS(status2));
-      }
-    }
-    else {
-      perror("fork, simple_command()");
-      exit(1);
-    }
-    return 0;
+  int pfd[2], pid;
+  
+  if (pipe(pfd) != 0) {
+    perror("pipe execute_complex_command()");
+    return -1;
   }
+
+  if (c->cmd1 == NULL || c->cmd2 == NULL) {
+    printf("Piping to nowhere\n");
+    return -1;
+  }
+    
+  int comStatus, pid2, status2;
+
+  if ((pid = fork()) == 0) {
+    /* Linking the pipe as stdout */
+    close(pfd[0]);
+    close(stdout);
+    dup2(pfd[1],fileno(stdout));
+      
+    execute_complex_command(c->cmd1);
+    printf("This shouldn't do anything\n");
+    exit(0);
+  }
+  else if (pid > 0) {
+      
+    waitpid(pid,&comStatus,0);
+	
+    if ((pid2 = fork()) == 0) {
+      /* Linking the pipe as stdin */
+      close(pfd[1]);
+      close(stdin);
+      dup2(pfd[0],fileno(stdin));
+	
+      printf("Done waiting: %d ", pid);
+      printf("Exit status of cmd1: %d\n", WEXITSTATUS(comStatus));
+	
+      execute_complex_command(c->cmd2);
+      close(pfd[0]);
+
+      /* Exiting the extra parent */
+      exit(0);
+    }  
+    else if (pid2 > 0) {
+      close(pfd[0]);
+      close(pfd[1]);
+
+      waitpid(pid2,&status2,0);
+	
+      printf("Done waiting: %d\n", pid2);
+      printf("pid: %d, exit status: %d\n", pid2,WEXITSTATUS(status2));
+    }
+  }
+  else {
+    perror("fork, simple_command()");
+    exit(1);
+  }
+  return 0;
+}
 
 
 int chained_sequence_command(command *cmd) {
@@ -329,8 +336,8 @@ int chained_sequence_command(command *cmd) {
     }
   }
   else {
-      perror("fork, sequemce_command");
-      exit(1);
+    perror("fork, sequemce_command");
+    exit(1);
   }
   return 0;
 }

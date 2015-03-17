@@ -48,7 +48,6 @@ int is_complex_command(char **tokens) {
 
 /* Parse a line into its tokens/words */
 void parse_line(char *line, char **tokens) {
-	
   while (*line != '\0') {
     /* Replace all whitespaces with \0 */
     while (*line == ' ' || *line == '\t' || *line == '\n') { 
@@ -143,6 +142,10 @@ int extract_redirections(char** tokens, simple_command* cmd) {
 /* Construct command */
 command* construct_command(char** tokens) {
 
+  if (!tokens) {
+    return NULL;
+  } 
+
   /* Initialize a new command */	
   command *cmd = malloc(sizeof(command));
   cmd->cmd1 = NULL;
@@ -169,23 +172,25 @@ command* construct_command(char** tokens) {
   else {
     /* Complex command */
 		
-    char **t1 = tokens, **t2;
+    char **t1 = tokens, **t2 = NULL;
     int i = 0;
     while(tokens[i]) {
       if(is_operator(tokens[i])) {
 	strncpy(cmd->oper, tokens[i], 2);
 	tokens[i] = NULL;
-	t2 = &(tokens[i+1]);
+
+	if (tokens[i+1]) {
+	  t2 = &(tokens[i+1]);
+	}
 	break;
       }
       i++;
     }
-		
+
     /* Recursively construct the rest of the commands */
     cmd->cmd1 = construct_command(t1);
     cmd->cmd2 = construct_command(t2);
-  }
-	
+  }	
   return cmd;
 }
 
