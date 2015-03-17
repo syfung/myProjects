@@ -7,11 +7,12 @@
 
 /* Determine if a token is a special operator (like '|') */
 int is_operator(char *token) {
-  /** 
-   * Optional: edit this if you wish to parse other operators
-   * like ";", "&&", etc.
-   */
-  return (strcmp(token, "|") == 0 || strcmp(token, ";") == 0);
+  /**
+   * 5 operator: '|' pipe, ';' sequence
+   * '&' parallel, '&&' logical AND, '||' logical OR */
+  return (strcmp(token, "|") == 0 || strcmp(token, ";") == 0\
+	  || strcmp(token, "&") == 0 || strcmp(token, "&&") == 0\
+	  || strcmp(token, "||") == 0);
 }
 
 /* Determine if a command is builtin */
@@ -206,12 +207,14 @@ void release_command(command *cmd) {
 void print_command(command *cmd, int level) {
 	
   int i;
+
+  /* Printing indentation */
   for(i = 0; i < level; i++) {
     printf("  ");
   }
-	
+
+  /* Simple command case */
   if(cmd->scmd) {
-		
     i = 0;
     while(cmd->scmd->tokens[i]) { 
       printf("%s ", cmd->scmd->tokens[i]);
@@ -233,13 +236,31 @@ void print_command(command *cmd, int level) {
     printf("\n");
     return;		 
   }
-	
-  printf("Pipeline:\n");
-			
+
+  /* Chain operator */
+  if (!strcmp(cmd->oper,"|")) {
+    printf("Pipeline:\n");
+  }
+  else if (!strcmp(cmd->oper,";")) {
+    printf("Sequence:\n");
+  }
+  else if (strcmp(cmd->oper, "&") == 0) {
+    printf("Background:\n");
+  }
+  else if (strcmp(cmd->oper, "&&") == 0) {
+    printf("AND:\n");
+  }
+  else if (strcmp(cmd->oper, "||") == 0){
+    printf("OR:\n");
+  }
+  else {
+    printf("Unknown operator\n");
+  }
+
+  /* Recusivlly calling print_command for cmd1, cmd2 */
   if(cmd->cmd1) {
     print_command(cmd->cmd1, level+1);
   }
-
   if(cmd->cmd2) {
     print_command(cmd->cmd2, level+1);
   }

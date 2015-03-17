@@ -28,6 +28,10 @@ int execute_simple_command(simple_command *cmd);
 int execute_complex_command(command *cmd);
 int chained_pipe_command(command *cmd);
 int chained_sequence_command(command *cmd);
+int chained_parallel_command(command *cmd);
+int chained_and_command(command *cmd);
+int chained_or_command(command *cmd);
+
 
 int main(int argc, char** argv) {
 	
@@ -231,9 +235,17 @@ int execute_complex_command(command *c) {
   if (!strcmp(c->oper, "|")) {
     chained_pipe_command(c);
   }
-
   else if (!strcmp(c->oper, ";")) {
     chained_sequence_command(c);
+  }
+  else if (!strcmp(c->oper, "&")) {
+    chained_parallel_command(c);
+  }
+  else if (!strcmp(c->oper, "&&")) {
+    chained_and_command(c);
+  }
+  else if (!strcmp(c->oper, "||")) {
+    chained_or_command(c);
   }
   return 0;
 }
@@ -309,7 +321,7 @@ int chained_sequence_command(command *cmd) {
     }
     else if (pid2 > 0) {
       waitpid(pid2, status2, 0);
-      printf("sequence command parent done wting/n");
+      printf("Sequence command parent done wating\n");
     }
     else {
       perror("fork, sequemce_command");
@@ -321,4 +333,11 @@ int chained_sequence_command(command *cmd) {
       exit(1);
   }
   return 0;
+}
+
+int chained_parallel_command(command *cmd) {
+}
+int chained_and_command(command *cmd) {
+}
+int chained_or_command(command *cmd) {
 }
