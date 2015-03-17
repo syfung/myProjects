@@ -255,25 +255,21 @@ int execute_complex_command(command *c) {
 
 
 int chained_pipe_command(command *c) {
-  int pfd[2], pid;
-  
-  if (pipe(pfd) != 0) {
-    perror("pipe execute_complex_command()");
-    return -1;
-  }
 
-  if (c->cmd1 == NULL || c->cmd2 == NULL) {
-    printf("Piping to nowhere\n");
+  int pipe_fd[2], pid;
+  if (pipe(pipe_fd) != 0) {
+    perror("pipe execute_complex_command()");
     return -1;
   }
     
   int comStatus, pid2, status2;
 
+
   if ((pid = fork()) == 0) {
     /* Linking the pipe as stdout */
-    close(pfd[0]);
+    close(pipe_fd[0]);
     close(stdout);
-    dup2(pfd[1],fileno(stdout));
+    dup2(pipe_fd[1],fileno(stdout));
       
     execute_complex_command(c->cmd1);
     printf("This shouldn't do anything\n");
@@ -283,17 +279,20 @@ int chained_pipe_command(command *c) {
       
     waitpid(pid,&comStatus,0);
 	
+
     if ((pid2 = fork()) == 0) {
-      /* Linking the pipe as stdin */
-      close(pfd[1]);
+      /* Linking// the pipe as stdin */
+      close(pipe_fd[1]);
       close(stdin);
-      dup2(pfd[0],fileno(stdin));
+      dup2(pipe_fd[0],fileno(stdin));
+
 	
       printf("Done waiting: %d ", pid);
       printf("Exit status of cmd1: %d\n", WEXITSTATUS(comStatus));
 	
+
       execute_complex_command(c->cmd2);
-      close(pfd[0]);
+      close(pipe_fd[0]);
 
       /* Exiting the extra parent */
       exit(0);
