@@ -4,4 +4,8 @@ At the moment, there is the '|' and  ';' operator, to chain command. Builtin com
 
 I am also working on adding the '&', '&&' and '||' operator.
 
-Other optional feature that might be added includes printing the exit value of main, environment verable and the '*' things (wield cat). 
+Other optional feature that might be added includes printing the exit value of main, environment verable and the '*' things (wield cat).
+
+Current State: 
+	The shell does not exit properly after a command failliur. 
+	Still trying to get 'emacs &' to work.
