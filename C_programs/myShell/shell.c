@@ -269,6 +269,7 @@ int chained_pipe_command(command *c) {
   
   int comStatus, pid2, status2;
 
+
   if ((pid = fork()) == 0) {
     /* Linking the pipe as stdout */
     close(pipe_fd[0]);
