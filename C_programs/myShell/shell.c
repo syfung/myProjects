@@ -353,14 +353,17 @@ int chained_parallel_command(command *cmd) {
   int pid, pid2, status1, status2;
 
   if ((pid = fork()) == 0) {
+    int sid = setsid(); /* Making the child independent of parent */
     execute_complex_command(cmd->cmd1);
+    exit(1); /* If the pervious statement did not exit */
   }
   else if (pid > 0) {
     if ((pid2 = fork()) == 0) {
-      execute_complex_command(cmd->cmd2);    
+      execute_complex_command(cmd->cmd2);
+      waitpid(pid, status1, 0);
+      exit(0);
     }
     else if (pid2 > 0) {  
-      waitpid(pid, status1, WNOHANG);
       waitpid(pid2, status2, 0);
       printf("Sequence command parent done wating\n");
     }
