@@ -353,10 +353,30 @@ int chained_parallel_command(command *cmd) {
   int pid, pid2, status1, status2;
 
   if ((pid = fork()) == 0) {
-    int sid = setsid(); /* Making the child independent of parent */
+    int sid, pid_daemon, status_daemon;
+    sid = setsid(); /* Making the child independent of parent */
+
+    /**
+     * TODO
+     * after makeing the process a daemon,
+     * it should fork and execl the cmd1
+     * while the parent wait for it 
+     * which then exit
+     */
+    
+    if ((pid_daemon = fork()) == 0) {
+
     execute_complex_command(cmd->cmd1);
     exit(1); /* If the pervious statement did not exit */
+      }
+    else if (pid_daemon > 0) {
+      printf("\n+%d\n", pid_daemon);
+      waitpid(pid_daemon, status_daemon, 0);
+      printf("\n-%d\n", pid_daemon);
+      exit(0);
+    }
   }
+      
   else if (pid > 0) {
     if ((pid2 = fork()) == 0) {
       execute_complex_command(cmd->cmd2);
@@ -365,15 +385,15 @@ int chained_parallel_command(command *cmd) {
     }
     else if (pid2 > 0) {  
       waitpid(pid2, status2, 0);
-      printf("Sequence command parent done wating\n");
+      printf("Parellel command parent done wating\n");
     }
     else {
-      perror("fork, sequemce_command");
+      perror("fork, parellel_command");
       exit(1);
     }
   }
   else {
-    perror("fork, sequemce_command");
+    perror("fork, parellel_command");
     exit(1);
   }
   return 0;
