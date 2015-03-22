@@ -1,3 +1,10 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%    Joshua Fung             March 22nd, 2015                            %
+%                                                                        %      
+%       This is my version of gaussian elimination                       %
+%       Works really porrly...                                           %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 clc;
 clear all;
 close all;
@@ -31,12 +38,16 @@ fprintf ('By MATLAB:\n');
 x_ans = OA\OB;
 disp (x_ans);
 
+% Doing this since the code modifed the matrix
 A = OA; 
 B = OB;
 
+% I still haven't figure out how to exclude a row in find,
+%  these matrix will store the piviting rows
 Upper = zeros(size(A));
 Upper_B = zeros (size(B));
 
+% Finding matrix size
 n = length(A(:,1));
 m = length(A(1,:));
 
