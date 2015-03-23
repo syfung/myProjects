@@ -5,7 +5,7 @@
 #include <arpa/inet.h>
 
 #ifndef PORT
-  #define PORT 30000
+#define PORT 30000
 #endif
 
 int setup (void) {
@@ -51,7 +51,16 @@ int setup (void) {
 
 int find_network_newline(char *buf, int inbuf) {
   // Step 1: write this function
+  int i;
+  printf("Checking for network newline\n");
+  for (i = 0; i < inbuf; i++) {
 
+    if (buf[i] == '\r') {
+      printf("Found newline\n");
+      return i;
+    }
+  }
+  
   return -1; // return the location of '\r' if found
 }
 
@@ -82,29 +91,31 @@ int main(void) {
       after = buf;        // start writing at beginning of buf
 
       while ((nbytes = read(fd, after, room)) > 0) {
-        // Step 2: update inbuf
-
-        
+	printf("Reading\n");
+	// Step 2: update inbuf
+	inbuf = nbytes;
+ 
         // Step 3: call find_network_newline, store result in where
-
-        
+	where = find_network_newline(buf, inbuf);
+	printf("Where: %d\n", where);
         if (where >= 0) { // OK. we have a full line
-
+	  printf("We have a fullline\n");
           // Step 4: output the full line using print statment below
           // Be sure to put a '\0' in the correct place first;
           // otherwise you'll get junk in the output.
           // (Replace the "\r\n" with appropriate characters so the 
           // message prints correctly to stdout.)
+	  buf[where] = '\0';
           
-          
-          printf ("Next message: %s", buf);
+          printf ("Next message: %s\n", buf);
           // Note that we could have also used write to avoid having to
           // put the '\0' in the buffer. Try using write later!
           
           
           // Step 5: update inbuf and remove the full line from the buffer
           // There might be stuff after the line, so don't just do inbuf = 0
-          
+
+	  
           // You want to move the stuff after the full line to the beginning 
           // of the buffer.  A loop can do it, or you can use memmove.
           // memmove(destination, source, number_of_bytes)
@@ -113,7 +124,9 @@ int main(void) {
             
         }
         // Step 6: update room and after, in preparation for the next read
-
+	room = room - nbytes;
+	after = after + nbytes;
+       
 
        
       }
