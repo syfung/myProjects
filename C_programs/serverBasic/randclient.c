@@ -9,7 +9,7 @@
   #define PORT 30000
 #endif
 
-#define TIMES 5 // number of times to send the message
+#define TIMES 20 // number of times to send the message
 #define MINCHARS 3
 #define MAXCHARS 7
 

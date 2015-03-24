@@ -1,5 +1,5 @@
 CC = gcc
-PORT=50201
+PORT=50203
 CFLAGS = -DPORT=$(PORT) -g -Wall
 
 all: readserver randclient bufserver
