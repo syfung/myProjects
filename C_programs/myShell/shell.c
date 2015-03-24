@@ -253,7 +253,7 @@ int execute_complex_command(command *c) {
   return 0;
 }
 
-
+/* The '|' operator for two command */
 int chained_pipe_command(command *c) {
 
   int pipe_fd[2], pid;
