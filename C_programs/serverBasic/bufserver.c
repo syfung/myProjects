@@ -117,9 +117,10 @@ int main(void) {
           // There might be stuff after the line, so don't just do inbuf = 0
 	  int i;
 	  for (i = 0; i < where + 1; i++) {
-	    printf("%d ", buf[i]);
+	    printf("%c ", buf[i]);
 	    buf[i] = '\0';
 	  }
+	  inbuf = 0;
 	  
           // You want to move the stuff after the full line to the beginning 
           // of the buffer.  A loop can do it, or you can use memmove.
