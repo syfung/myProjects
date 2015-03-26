@@ -5,23 +5,25 @@
 #define NUMDIV 5
 #endif
 
-int gen_tri_num (int num);
-int num_div (int triNum);
+long int gen_tri_num (int num);
+int num_div (long int triNum);
 
 int main (void) {
   int i, j, intr = 100;
   for (i = 1; ; i += intr) {
     printf("\nstill under\n");
     if (num_div(gen_tri_num(i)) >= NUMDIV) {
-      printf("over: %d\n", gen_tri_num(i));
-      intr /= 2;
-      for (j = i; ; j -= intr) {
+      printf("over: %ld\n", gen_tri_num(i));
+      intr = (intr / 2);
+      printf("working\n");
+      for (j = i-intr; ; j -= intr) {
+	//printf("working\n");
+	if ((int)gen_tri_num(i) == (int)gen_tri_num(j)) {
+	  printf("ans: %ld\n", gen_tri_num(j));
+	  exit(0);
+	}
 	if (num_div(gen_tri_num(j)) <= NUMDIV) {
-	  printf("under: %d\n", gen_tri_num(j));
-	  if (i == j) {
-	    printf("ans: %d\n", gen_tri_num(j));
-	    exit(0);
-	  }
+	  printf("under: %ld\n", gen_tri_num(j));
 	  i = j;
 	  break;
 	}
@@ -33,23 +35,18 @@ int main (void) {
 
 
 
-int gen_tri_num (int num) {
+long int gen_tri_num (int num) {
   return (num * (num + 1)) / 2;
 }
 
-int num_div (int x) {
-  int limit = x;
-  int numberOfDivisors = 0;
-  int i;
-  for (i = 1; i < limit; ++i) {
-    if (x % i == 0) {
-      limit = x / i;
-      if (limit != i) {
-	numberOfDivisors++;
-      }
-      numberOfDivisors++;
+int num_div (long int n) {
+  int counter,i;
+  printf("num %ld", n);
+  for(counter=0,i=1;(!(n%i) && (counter++)) || i<=(n/2);i++);
+  if (n==2 || n==1) {
+      return counter;
     }
-  }
-
-  return numberOfDivisors;
+  printf("div working numdiv: %d\n", counter);
+  return ++counter;
 }
+  
