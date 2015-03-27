@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 
 #ifndef NUMDIV
   #define NUMDIV 5
@@ -27,7 +26,7 @@ int gen_tri_num (int num) {
 int num_div (int n) {
   int counter = 1,i = 2;
   
-  while (i < sqrt(n)) {
+  while (1) {
 
     if (n % i == 0) {
       counter++;
@@ -37,13 +36,16 @@ int num_div (int n) {
     }
 
     i++;
+    
+    if ((i * i) > n) {
+      return counter;
+    }
+    else if ((i * i) == n) {
+      return counter++;
+    }
   }
 
-  if ((i * i) == n) {
-    counter++;
-  }
-
-  return counter;
+  exit(1);
 }
 
   
