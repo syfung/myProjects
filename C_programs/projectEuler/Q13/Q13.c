@@ -31,21 +31,29 @@ int main (int argc, char **argv) {
        i++) {
     *(numbers + 1 + i) = malloc(sizeof(char) * MAXSIZE);
     printf("Working %d\n", i);
-    for (j = 0; j < MAXSIZE; j++) {
-      if (*(*(numbers + i) + j) == '\n') {
-	*(*(numbers + i) + j) = '\0';
-	break;
-      }
-    }
+    *(*(numbers + i) + 15) = '\0';
   }
-  
   *(numbers + 1 + i) = NULL;
   
   for (i = 0; *(numbers + i) != NULL; i++) {
     printf("%s\n", *(numbers + i));
   }
-  
+
+  double l1[100];
   for (i = 0; i < 100; i++) {
+    sscanf(*(numbers + i), "%lf\0",&l1[i]);
+    l1[i] = l1[i] / 1e5;
+    printf("%lf\n",l1[i]);
+  }
+
+  double sum = 0;
+  for (i = 0; i < 100; i++) {
+    sum += l1[i];
+  }
+
+  printf("%lf\n", sum);
+  
+  for (i = 0; *(numbers + i) != NULL; i++) {
     free(*(numbers + i));
   }
 
