@@ -81,7 +81,7 @@ erf_m = @(x) (2/sqrt(pi))*quad(@(t)(exp(-t.^2)), 0, x);
 disp(['MATLAB erf -1: ', num2str(erf_m(-1)),', 2: ' num2str(erf_m(2))]);
 
 % Part c
-dblquad(@(x,y)sin(pi .* x), 0,1,0,1)
+dblquad(@(x,y)sin(pi .* x), 0,y,0,1)
 
 %% Question 3
 syms x sym_r y
@@ -94,13 +94,9 @@ d2fq1_dx2 = diff(dfq1_dx, x)
 figure
 ezplot(dfq1_dx,[0,2*pi])
 
-figure
-ezplot(d2fq1_dx2,[0,2*pi])
-
 % Q2
 f_q2 = ((cos(x).^2) ./ sqrt((sym_r/a).^2 - sin(x).^2))
 int_fq2 = int(f_q2, x, 0, pi / 2)
-%ezplot(int_fq2, [0,10])
 
 % Q3
 f_q3 = sin(pi * x)
