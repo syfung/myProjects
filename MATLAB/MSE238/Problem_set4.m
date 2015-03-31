@@ -13,28 +13,20 @@ dx_dthe_2pc = @(the) ((f_the(the+h)) - (f_the(the-h))) ./ (2 * h);
 % MATLAB diff()
 dx_dthe = diff(f_the(the)) ./ h;
 
-figure
+Q1_v = figure;
 hold on
 plot(the,dx_dthe_2pc(the), 'r');
 plot(the(1:end-1),dx_dthe, 'k--');
-legend('Two Point Central','MATLAB diff()');
-title('Q1 Velocity wrt theta');
-xlabel('theta');
-ylabel('dx/dtheta');
 
 % Accelration Four Point Forward & MATLAB diff
 d2x_dthe2_4pf = @(the) (f_the(the) - (2 * f_the(the + h)) + f_the(the + (2 * h))) ./ (h^2);
 % MATLAB diff()
 d2x_dthe2 = diff(dx_dthe) ./ h;
 
-figure
+Q1_a = figure;
 hold on 
 plot(the, d2x_dthe2_4pf(the), 'r');
 plot(the(1:end-2), d2x_dthe2, 'k--');
-legend('Four Point Forawrd','MATLAB diff()');
-title('Q1 Accelration wrt theta');
-xlabel('theta');
-ylabel('dx2/d2theta');
 
 %% Question 2
 a = 1;
@@ -59,21 +51,26 @@ for r = (1 * a):(0.1 * a):(10 * a);
     i = i + 1;
 end
 
-figure
-plot(x,val(1,x))
+% Q2a = figure
+% plot(x,val(1,x))
 
-figure 
+Q2a = figure;
 hold on
 plot((1 * a):(0.1 * a):(10 * a),inte_tra);
 plot((1 * a):(0.1 * a):(10 * a),inte_sim);
 plot((1 * a):(0.1 * a):(10 * a),inte_gauss);
 title 'Displacement with radius r'
 legend('Trapezoidal','Simpsons rule','gauss')
-
+xlabel('r');
+ylabel('Displacment')
 % Part b
 f_m = @(x,f) x .* exp(-(x .* (f + 1) ./ 2).^2) ./ 2;
 erf = @(x) (2/sqrt(pi)) .* (0.3478548 .* f_m(x,-0.86113631) + 0.6521452 * f_m(x,-0.33998104) + 0.6521452...
     .* f_m(x, 0.33998104) + 0.3478548 .* f_m(x, 0.86113631));
+
+Q2b = figure; 
+hold on
+ezplot(erf,[-2,2])
 
 fprintf('Gauss erf -1: %6.6d, 2: %6.6d\n',erf(-1),erf(2));
 
@@ -81,28 +78,54 @@ erf_m = @(x) (2/sqrt(pi))*quad(@(t)(exp(-t.^2)), 0, x);
 disp(['MATLAB erf -1: ', num2str(erf_m(-1)),', 2: ' num2str(erf_m(2))]);
 
 % Part c
-dblquad(@(x,y)sin(pi .* x), 0,1,0,1)
-
+disp (['Part c: ', num2str(dblquad(@(x,y)sin(pi .* x), 0,1,0,1))])
+disp(' ');
 %% Question 3
 syms x sym_r y
+
+disp('Question 3, symbolic');
 
 % Q1
 f_q1 = R * (cos(x) + sqrt((2.5 ^ 2) - (sin(x) .^ 2)))
 dfq1_dx = diff(f_q1,x)
 d2fq1_dx2 = diff(dfq1_dx, x)
 
-figure
-ezplot(dfq1_dx,[0,2*pi])
+% figure(Q1_v)
+ezplot(dfq1_dx,[0,2*pi], Q1_v)
+hold on 
+legend('Two Point Central','MATLAB diff()','symbolic');
+title('Q1 Velocity wrt theta');
+xlabel('theta');
+ylabel('dx/dtheta');
 
-figure
-ezplot(d2fq1_dx2,[0,2*pi])
+% figure(Q1_a)
+ezplot(d2fq1_dx2,[0,2*pi], Q1_a)
+hold on
+legend('Four Point Forawrd','MATLAB diff()');
+title('Q1 Accelration wrt theta');
+xlabel('theta');
+ylabel('dx2/d2theta');
 
-% Q2
-f_q2 = ((cos(x).^2) ./ sqrt((sym_r/a).^2 - sin(x).^2))
-int_fq2 = int(f_q2, x, 0, pi / 2)
-%ezplot(int_fq2, [0,10])
+% Q2-a
+w0 = int((cos(x).^2) ./ sqrt((a/a).^2 - sin(x).^2), 0, pi / 2)
+int_fq2a = w0 * int((cos(x).^2) ./ sqrt((sym_r/a).^2 - sin(x).^2), x, 0, (pi / 2)-h)
 
-% Q3
-f_q3 = sin(pi * x)
-int_fq3 = int(f_q3, x, 0, y)
-int_int_fq3 = int(int_fq3, y, 0, 1)
+% Q2-b
+f_q2b = (2 / sqrt(pi)) * int(exp(-x^2),0,x)
+
+% figure(Q2b)
+ezplot(f_q2b,[-2,2], Q2b)
+legend('erf Gauss','erf symbolic');
+title('Erf');
+xlabel('x');
+ylabel('erf(x)');
+
+% Q2-c
+f_q2c = sin(pi * x);
+int_fq2c = int(f_q2c, x, 0, y);
+int_int_fq2c = int(int_fq2c, y, 0, 1)
+
+print(Q1_v,'-dpng','-r150','Question1_velocity_josh.png');
+print(Q1_a,'-dpng','-r150','Question1_acceleration_josh.png');
+print(Q2a,'-dpng','-r150','Question2_displacement_josh.png');
+print(Q2b,'-dpng','-r150','Question2_erf_josh.png');
