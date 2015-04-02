@@ -23,25 +23,34 @@ struct client *addclient(struct client *top, int fd, struct in_addr addr) {
   p->ipaddr = addr;
   p->next = top;
   top = p;
+
   return top;
 }
 
 struct client *removeclient(struct client *top, int fd) {
+
   struct client **p;
 
-  for (p = &top; *p && (*p)->fd != fd; p = &(*p)->next)
+  for (p = &top; *p && (*p)->fd != fd; p = &(*p)->next) {
     ;
-  // Now, p points to (1) top, or (2) a pointer to another client
-  // This avoids a special case for removing the head of the list
+  }
+
+  /* Now, p points to (1) top, or (2) a pointer to another client
+   * This avoids a special case for removing the head of the list
+   */
+  
   if (*p) {
     struct client *t = (*p)->next;
     printf("Removing client %d %s\n", fd, inet_ntoa((*p)->ipaddr));
     free(*p);
     *p = t;
-  } else {
+  }
+
+  else {
     fprintf(stderr, "Trying to remove fd %d, but I don't know about it\n",
 	    fd);
   }
+
   return top;
 }
 
@@ -58,19 +67,25 @@ int handleclient(struct client *p, struct client *top) {
   char buf[256];
   char outbuf[512];
   int len = read(p->fd, buf, sizeof(buf) - 1);
+
   if (len > 0) {
     buf[len] = '\0';
     printf("Received %d bytes: %s", len, buf);
     sprintf(outbuf, "%s says: %s", inet_ntoa(p->ipaddr), buf);
     broadcast(top, outbuf, strlen(outbuf));
     return 0;
-  } else if (len == 0) {
-    // socket is closed
+  }
+
+  else if (len == 0) {
+    /* socket is closed */
     printf("Disconnect from %s\n", inet_ntoa(p->ipaddr));
     sprintf(outbuf, "Goodbye %s\r\n", inet_ntoa(p->ipaddr));
     broadcast(top, outbuf, strlen(outbuf));
     return -1;
-  } else { // shouldn't happen
+  }
+
+  else {
+    /* shouldn't happen */
     perror("read");
     return -1;
   }

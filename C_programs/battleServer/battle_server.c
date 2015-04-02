@@ -12,86 +12,99 @@
 #include "client_handle.h"
 #include "game_control.h"
 
-/*
+
 int main(void) {
   int listenfd;
   listenfd = bindandlisten();
 
-  return 0;
-}
-*/
-
-int main(void) {
-  int clientfd, maxfd, nready;
-  struct client *p;
-  struct client *head = NULL;
-  socklen_t len;
-  struct sockaddr_in q;
-  struct timeval tv;
+  /* Initialze allset and rset */
   fd_set allset;
   fd_set rset;
 
-  int i;
-
-
-  int listenfd = bindandlisten();
-  // initialize allset and add listenfd to the
-  // set of file descriptors passed into select
+  /* Add listenfd to the set of fd passed into select */
   FD_ZERO(&allset);
   FD_SET(listenfd, &allset);
-  // maxfd identifies how far into the set to search
-  maxfd = listenfd;
 
-  while (1) {
+  /* Select */
+  int clientfd, maxfd, nready;
+
+  /* maxfd identifies how far into the set to search */
+  maxfd = listenfd;
+  
+  /* Accept */
+  socklen_t len;
+  struct sockaddr_in q;
+
+  /* Client handle */
+  struct client *p;
+  struct client *head = NULL;
+
+  /* Game player control player list */
+  struct player *player;
+  struct player *player_head = NULL;
+
+  int i, temp_fd, result;
+
+    while (1) {
+
     // make a copy of the set before we pass it into select
     rset = allset;
-    /* timeout in seconds (You may not need to use a timeout for
-     * your assignment)*/
-    tv.tv_sec = 10;
-    tv.tv_usec = 0;  /* and microseconds */
 
-    nready = select(maxfd + 1, &rset, NULL, NULL, &tv);
-    if (nready == 0) {
-      printf("No response from clients in %ld seconds\n", tv.tv_sec);
-      continue;
-    }
-
-    if (nready == -1) {
+    /* Waiting for input, and error check */
+    if ((nready = select(maxfd + 1, &rset, NULL, NULL, NULL)) == -1) {
       perror("select");
       continue;
     }
 
+    /* New connection */
     if (FD_ISSET(listenfd, &rset)){
-      printf("a new client is connecting\n");
+      printf("A new client is connecting\n");
       len = sizeof(q);
+
       if ((clientfd = accept(listenfd, (struct sockaddr *)&q, &len)) < 0) {
 	perror("accept");
 	exit(1);
       }
+
+      /* Adding clientfd to the set */
       FD_SET(clientfd, &allset);
+
+      /* Updating max fd */
       if (clientfd > maxfd) {
 	maxfd = clientfd;
       }
-      printf("connection from %s\n", inet_ntoa(q.sin_addr));
+
+      
+      printf("Connection from %s\n", inet_ntoa(q.sin_addr));
       head = addclient(head, clientfd, q.sin_addr);
+      player_head = addplayer(player_head, clientfd);
     }
 
+    /* Check all fd in fd_set */
     for(i = 0; i <= maxfd; i++) {
+
       if (FD_ISSET(i, &rset)) {
-	for (p = head; p != NULL; p = p->next) {
-	  if (p->fd == i) {
-	    int result = handleclient(p, head);
+	for (player = player_head; player != NULL; player = player->next) {
+	  
+	  /* Findind the fd in the list */
+	  if (player->fd == i) {
+	    printf("Found player\n");
+	    result = playerinput(player, head);
+
 	    if (result == -1) {
-	      int tmp_fd = p->fd;
-	      head = removeclient(head, p->fd);
-	      FD_CLR(tmp_fd, &allset);
-	      close(tmp_fd);
+	      temp_fd = player->fd;
+	      head = removeclient(head, player->fd);
+	      FD_CLR(temp_fd, &allset);
+	      close(temp_fd);
 	    }
+	    
 	    break;
 	  }
 	}
       }
     }
   }
+
+  
   return 0;
 }
