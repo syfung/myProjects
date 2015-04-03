@@ -10,6 +10,8 @@
 void ask_name(int fd);
 char *read_name(char **buf, char *input_buf, int added_len);
 struct player *find_against(struct player *top);
-void set_against (struct player *p, struct player *against);
+void game_init(struct player *p, struct player *against);
+void set_against(struct player *p, struct player *against);
+void init_hit_power(struct player *p);
 
 #endif /* GAME_CONTROL_H */

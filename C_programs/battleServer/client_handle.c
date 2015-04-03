@@ -87,6 +87,7 @@ int handle_player_input(struct player *p, struct player *top) {
     broadcast(top, p->fd, outbuf, strlen(outbuf));
     return -1;
   }
+  
   switch(p->in_game) {
 
   case IN_BATTLE:
@@ -105,7 +106,7 @@ int handle_player_input(struct player *p, struct player *top) {
 	struct player *against;
 	if ((against = find_against(top)) != NULL) {
 	  printf("Found an oppenete %d for %d\n", against->fd, p->fd);
-	  set_against(p, against);
+	  game_init(p, against);
 	}
 	
 	p->ready = READY;

@@ -63,6 +63,20 @@ struct player *find_against(struct player *top) {
   return NULL;
 }
 
+void game_init(struct player *p, struct player *against) {
+  char outbuf[MAX_BUF];
+  
+  set_against(p, against);
+  init_hit_power(p);
+  init_hit_power(against);
+
+  sprintf(outbuf, "You engaged %s\r\n", against->name);
+  write(p->fd, outbuf, strlen(outbuf));
+
+  sprintf(outbuf, "You engaged %s\r\n", p->name);
+  write(against->fd, outbuf, strlen(outbuf));
+}
+
 void set_against (struct player *p, struct player *against) {
   p->in_game = IN_BATTLE;
   against->in_game = IN_BATTLE;
@@ -70,3 +84,10 @@ void set_against (struct player *p, struct player *against) {
    p->against_fd = against->against_fd;
    against->against_fd = p->against_fd;
 }
+
+void init_hit_power(struct player *p) {
+  srand(1);
+  p->hitpoint = rand() % (16 - 9 + 1) + 9;
+  p->powermove = rand() % (4 - 0 + 1) + 0;
+}
+
