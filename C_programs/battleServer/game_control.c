@@ -8,66 +8,65 @@
 #include "client_handle.h"
 #include "game_control.h"
 
-struct player *addplayer(struct player *top, int fd) {
-  struct player * player;
-  if ((player = malloc(sizeof(struct player))) == NULL) {
-    perror("malloc");
-    exit(1);
-  }
-
-  /* Sent out ask name statment */
-  write(fd, "Pick a name:\0", 13);
-  
-  player->fd = fd;
-  player->against = 0;
-  player->in_game = NOT_IN_BATTLE;
-  player->ready = NOT_READY;
-  player->position = 0;
-  player->next = top;
-  
-  top = player;
-  
-  return top;
+void ask_name(int fd) {
+  write(fd, "Enter your name:", 16);
 }
 
-struct player *removeplayer(struct player *top, int fd);
-
-int playerinput(struct player *player, struct client *top) {
-  printf("Reading input\n");
-  int len = read(player->fd, &(player->temp[player->position]),	\
-		 MAX_TEMP_LEN - 1);
-
-    if (len == 0) {
-    /* socket is closed 
-    printf("Disconnect from %s\n", inet_ntoa(player->ipaddr));
-    sprintf(outbuf, "Goodbye %s\r\n", inet_ntoa(player->ipaddr));
-    broadcast(top, outbuf, strlen(outbuf));
-  */
-    return -1;
-    }
-
-
-  char tempbuf[MAX_TEMP_LEN];
-  switch(player->in_game) {
-
-  case IN_BATTLE:
-    break;
-  case NOT_IN_BATTLE:
-    if (player->ready == NOT_READY) {
-      printf("Reading input, player not in game not ready\n");
-      player->position += len;
-     
-      memmove(tempbuf, player->temp, player->position + 1);
-      tempbuf[player->position + 2] = '\0';
-      printf("%s\n", tempbuf);
-    }
-    break;
-  default:
-    /* The server is not runing properly */
-    printf("in_game: error");
-    exit(1);
+char *read_name(char **buf, char *input_buf, int added_len) {
+  int i, size;
+  char *p;
+  
+  if (*buf == NULL) {
+    *buf = malloc(sizeof(char));
+    *buf[0] = '\0';
   }
+  
+  for(i = 0; i < added_len; i++) {
+    if (input_buf[i] == '\n') {
+      printf("read_name: a newline is found ");
+      size = strlen(*buf);
+      p = malloc(size + added_len + 1);
+      memmove(p, *buf, size);
+      memmove(&p[size], input_buf, i);
+      p[size + i] = '\0';
+      printf("read_name: %s\n", p);
 
-  return 0;        
+      free(*buf);
+      *buf = NULL;
+      return p;
+    }
+  }
+  printf("read_name: No newline found\n");
+
+  
+  size = strlen(*buf);
+  p = malloc(size + added_len + 1);
+  memmove(p, *buf, size);
+  memmove(&p[size], input_buf, added_len);
+  p[size + added_len] = '\0';
+  printf("read_name: %s\n", p);
+
+  free(*buf);
+  *buf = p;
+  return NULL;
 }
 
+struct player *find_against(struct player *top) {
+  struct player *p;
+  for(p = top; p; p = p->next) {
+    if (p->in_game == NOT_IN_BATTLE) {
+      if (p->ready == READY) {
+	return p;
+      }
+    }
+  }
+  return NULL;
+}
+
+void set_against (struct player *p, struct player *against) {
+  p->in_game = IN_BATTLE;
+  against->in_game = IN_BATTLE;
+
+   p->against_fd = against->against_fd;
+   against->against_fd = p->against_fd;
+}

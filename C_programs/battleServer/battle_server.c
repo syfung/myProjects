@@ -36,12 +36,8 @@ int main(void) {
   struct sockaddr_in q;
 
   /* Client handle */
-  struct client *p;
-  struct client *head = NULL;
-
-  /* Game player control player list */
-  struct player *player;
-  struct player *player_head = NULL;
+  struct player *p;
+  struct player *head = NULL;
 
   int i, temp_fd, result;
 
@@ -76,24 +72,23 @@ int main(void) {
 
       
       printf("Connection from %s\n", inet_ntoa(q.sin_addr));
-      head = addclient(head, clientfd, q.sin_addr);
-      player_head = addplayer(player_head, clientfd);
+      head = add_player(head, clientfd, q.sin_addr);
     }
 
     /* Check all fd in fd_set */
     for(i = 0; i <= maxfd; i++) {
 
       if (FD_ISSET(i, &rset)) {
-	for (player = player_head; player != NULL; player = player->next) {
+	for (p = head; p != NULL; p = p->next) {
 	  
 	  /* Findind the fd in the list */
-	  if (player->fd == i) {
-	    printf("Found player\n");
-	    result = playerinput(player, head);
+	  if (p->fd == i) {
+	    printf("Player with fd %d ready to read\n", i);
+	    result = handle_player_input(p, head);
 
 	    if (result == -1) {
-	      temp_fd = player->fd;
-	      head = removeclient(head, player->fd);
+	      temp_fd = p->fd;
+	      head = remove_player(head, p->fd);
 	      FD_CLR(temp_fd, &allset);
 	      close(temp_fd);
 	    }

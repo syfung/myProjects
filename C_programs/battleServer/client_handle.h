@@ -1,16 +1,32 @@
 #ifndef CLIENT_HANDLE_H
 #define CLIENT_HANDLE_H
 
-struct client {
+#define MAX_NAME 10
+
+#define MAX_BUF 512
+
+struct player {
   int fd;
+  int against_fd; /* Against/Previous plyers fd */
+
+  short in_game; /* Flag for in battle */
+  short ready; /* Flage for ready */
+
+  int hitpoint;
+  int powermove;
+
   struct in_addr ipaddr;
-  struct client *next;
+
+  char *name;
+  char *buf;
+  
+  struct player *next;
 };
 
-struct client *addclient(struct client *top, int fd, struct in_addr addr);
-struct client *removeclient(struct client *top, int fd);
-void broadcast(struct client *top, char *s, int size);
+struct player *add_player(struct player *top, int fd, struct in_addr addr);
+struct player *remove_player(struct player *top, int fd);
 
-int handleclient(struct client *p, struct client *top);
+void broadcast(struct player *top, int exclude_fd, char *s, int size);
+int handle_player_input(struct player *p, struct player *top);
 
 #endif
