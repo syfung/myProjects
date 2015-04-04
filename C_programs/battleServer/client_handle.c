@@ -77,6 +77,7 @@ int handle_player_input(struct player *p, struct player *top) {
   printf("Handleing player %d input\n", p->fd);
   char  outbuf[MAX_BUF], tempbuf[MAX_BUF];
   int len;
+  struct player *against;
   len = read(p->fd, tempbuf, MAX_BUF);
   printf("handle_player_input: Read\n");
   
@@ -94,7 +95,15 @@ int handle_player_input(struct player *p, struct player *top) {
     if(p->turn == TURN) {
       if(tempbuf[0] == 'a' || tempbuf[0] == 'A') {
 	if (attack_move(p, p->against_p) == -1) {
-	  
+	  struct player *temp = p->against_p;  
+	  if((against = find_against(p, top)) != NULL) {
+	    printf("Found an oppenete %d for %d\n", against->fd, p->fd);
+	    game_init(p, against);
+	  }
+	  if((against = find_against(temp, top)) != NULL) {
+	    printf("Found an oppenete %d for %d\n", against->fd, p->fd);
+	    game_init(temp, against);
+	  }	  
 	}
       }
       else if(tempbuf[0] == 'p' || tempbuf[0] == 'P') {
@@ -116,7 +125,6 @@ int handle_player_input(struct player *p, struct player *top) {
 
 	write(p->fd, "Waiting for opponent...\r\n", 25);
 	
-	struct player *against;
 	if ((against = find_against(p, top)) != NULL) {
 	  printf("Found an oppenete %d for %d\n", against->fd, p->fd);
 	  game_init(p, against);

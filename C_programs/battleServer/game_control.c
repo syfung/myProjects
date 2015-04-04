@@ -58,7 +58,9 @@ struct player *find_against(struct player *p, struct player *top) {
     if(temp->in_game == NOT_IN_BATTLE) {
       if(temp->ready == READY) {
 	if(temp != p->against_p) {
-	  return temp;
+	  if(temp != p) {
+	    return temp;
+	  }
 	}
       }
     }
@@ -128,7 +130,7 @@ void players_turn(struct player *p, struct player *against) {
   write(against->fd, outbuf, strlen(outbuf));
 
   /* Notifing against to wait to strik */
-  sprintf(outbuf, "\nIt is %s turn...\n",against->name);
+  sprintf(outbuf, "\nIt is %s's turn!\n",against->name);
   write(p->fd, outbuf, strlen(outbuf));
 
   p->turn = WAIT;
@@ -139,11 +141,11 @@ void dead(struct player *dead, struct player *won) {
   char outbuf[MAX_BUF];
   
   /* Notifing  */
-  sprintf(outbuf, "\nYou died\n");
+  sprintf(outbuf, "\nYou died\nWaiting for new opponet...\n");
   write(dead->fd, outbuf, strlen(outbuf));
 
   /* Notifing  */
-  sprintf(outbuf, "\nYou won\n");
+  sprintf(outbuf, "\nYou won\nWaiting for new opponet...\n");
   write(won->fd, outbuf, strlen(outbuf));
 
   dead->in_game = NOT_IN_BATTLE;
