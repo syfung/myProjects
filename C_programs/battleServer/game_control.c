@@ -75,6 +75,14 @@ void game_init(struct player *p, struct player *against) {
 
   sprintf(outbuf, "You engaged %s\r\n", p->name);
   write(against->fd, outbuf, strlen(outbuf));
+
+  sprintf(outbuf, "Your hitpoint: %d\nYour powermove: %d\n"\
+	  , p->hitpoint, p->powermove);
+  write(against->fd, outbuf, strlen(outbuf));
+
+  sprintf(outbuf, "**%s**\nhitpoint: %d\nYour powermove: %d\n"\
+	  , against->name, p->hitpoint, p->powermove);
+  write(against->fd, outbuf, strlen(outbuf));
 }
 
 void set_against (struct player *p, struct player *against) {
