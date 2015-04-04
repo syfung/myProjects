@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -65,36 +66,58 @@ struct player *find_against(struct player *top) {
 
 void game_init(struct player *p, struct player *against) {
   char outbuf[MAX_BUF];
+  srand(time(NULL));
   
   set_against(p, against);
   init_hit_power(p);
   init_hit_power(against);
 
+  /* Notifing p, found oppounet */
   sprintf(outbuf, "You engaged %s\r\n", against->name);
   write(p->fd, outbuf, strlen(outbuf));
 
+  /* Notifing against, found oppounet */
   sprintf(outbuf, "You engaged %s\r\n", p->name);
   write(against->fd, outbuf, strlen(outbuf));
 
+  /* Notifing p the asigned hitpoint and powermove */
   sprintf(outbuf, "Your hitpoint: %d\nYour powermove: %d\n"\
 	  , p->hitpoint, p->powermove);
+  write(p->fd, outbuf, strlen(outbuf));
+  
+  /* Notifing p oppounet's hitpoint */
+  sprintf(outbuf, "** %s's **\nhitpoint: %d\n"\
+	  , against->name, against->hitpoint);
+  write(p->fd, outbuf, strlen(outbuf));
+
+  /* Notifing against the asigned hitpoint and powermove */
+   sprintf(outbuf, "Your hitpoint: %d\nYour powermove: %d\n"\
+	  , against->hitpoint, against->powermove);
   write(against->fd, outbuf, strlen(outbuf));
 
-  sprintf(outbuf, "**%s**\nhitpoint: %d\nYour powermove: %d\n"\
-	  , against->name, p->hitpoint, p->powermove);
+  /* Notifing against oppounet's hitpoint */
+  sprintf(outbuf, "\n** %s's **\nhitpoint: %d\n"\
+	  , p->name, p->hitpoint);
+  write(against->fd, outbuf, strlen(outbuf));
+
+  /* Notifing p it is his turn to strik */
+  sprintf(outbuf, "\n(A)ttack\n(P)owermove\n(S)peak\n");
+  write(p->fd, outbuf, strlen(outbuf));
+
+  /* Notifing against to wait to strik */
+  sprintf(outbuf, "\nIt is %s turn\n",p->name);
   write(against->fd, outbuf, strlen(outbuf));
 }
 
 void set_against (struct player *p, struct player *against) {
-  p->in_game = IN_BATTLE;
-  against->in_game = IN_BATTLE;
-
-   p->against_fd = against->against_fd;
-   against->against_fd = p->against_fd;
+    p->in_game = IN_BATTLE;
+    against->in_game = IN_BATTLE;
+    
+    p->against_fd = against->against_fd;
+    against->against_fd = p->against_fd;
 }
 
-void init_hit_power(struct player *p) {
-  srand(1);
+void init_hit_power(struct player *p) {    
   p->hitpoint = rand() % (16 - 9 + 1) + 9;
   p->powermove = rand() % (4 - 0 + 1) + 0;
 }

@@ -3,7 +3,7 @@
 
 #define MAX_NAME 10
 
-#define MAX_BUF 512
+#define MAX_BUF 1024
 
 struct player {
   int fd;
