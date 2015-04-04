@@ -22,7 +22,7 @@ void players_turn(struct player *p, struct player *against);
 void dead(struct player *p, struct player *against);
 
 int attack_move(struct player *p, struct player *against);
-void powermove_move(struct player *p, struct player *against);
+int powermove_move(struct player *p, struct player *against);
 void speak_move(struct player *p);
 
 #endif /* GAME_CONTROL_H */

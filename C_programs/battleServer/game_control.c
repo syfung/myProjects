@@ -95,7 +95,7 @@ void game_init(struct player *p, struct player *against) {
   write(p->fd, outbuf, strlen(outbuf));
 
   /* Notifing against the asigned hitpoint and powermove */
-   sprintf(outbuf, "Your hitpoint: %d\nYour powermove: %d\n"\
+  sprintf(outbuf, "Your hitpoint: %d\nYour powermove: %d\n"\
 	  , against->hitpoint, against->powermove);
   write(against->fd, outbuf, strlen(outbuf));
 
@@ -110,15 +110,15 @@ void game_init(struct player *p, struct player *against) {
 }
 
 void set_against (struct player *p, struct player *against) {
-    p->in_game = IN_BATTLE;
-    against->in_game = IN_BATTLE;
+  p->in_game = IN_BATTLE;
+  against->in_game = IN_BATTLE;
     
-    p->against_p = against;
-    against->against_p = p;
+  p->against_p = against;
+  against->against_p = p;
 }
 
 void init_hit_power(struct player *p) {    
-  p->hitpoint = rand() % (16 - 9 + 1) + 9;
+  p->hitpoint = rand() % (22 - 13 + 1) + 13;
   p->powermove = rand() % (4 - 0 + 1) + 0;
 }
 
@@ -126,7 +126,7 @@ void players_turn(struct player *p, struct player *against) {
   char outbuf[MAX_BUF];
   
   /* Notifing p it is his turn to strik */
-  sprintf(outbuf, "\n(A)ttack\n(P)owermove\n(S)peak\nInput move: \n");
+  sprintf(outbuf, "\nIt is your trun\n(A)ttack\n(P)owermove\n(S)peak\nInput move: \n");
   write(against->fd, outbuf, strlen(outbuf));
 
   /* Notifing against to wait to strik */
@@ -154,12 +154,21 @@ void dead(struct player *dead, struct player *won) {
 
 int attack_move(struct player *p, struct player *against) {
   char outbuf[MAX_BUF];
+
+  /* Notifing */
+  sprintf(outbuf, "\n%s used attack\n",p->name);
+  write(against->fd, outbuf, strlen(outbuf));
+  
   against->hitpoint = against->hitpoint - (rand() % (6-1 +1)+1);
 
   if(against->hitpoint < 0) {
-    dead(p, against);
+    dead(against, p);
     return -1;
   }
+  
+  /* Notifing */
+  sprintf(outbuf, "You have %d hitpoint left\n",against->hitpoint);
+  write(against->fd, outbuf, strlen(outbuf));
   
   /* Notifing against oppounet's hitpoint */
   sprintf(outbuf, "\n** %s's **\nhitpoint: %d\n"\
@@ -170,9 +179,63 @@ int attack_move(struct player *p, struct player *against) {
 
   return 0;
 }
-void powermove_move(struct player *p, struct player *against) {
+int powermove_move(struct player *p, struct player *against) {
+  char outbuf[MAX_BUF];
 
+  if(p->powermove < 1) {
+    sprintf(outbuf, "\nYou have no more power move left\nYou wasted a turn");
+    write(p->fd, outbuf, strlen(outbuf));
+    players_turn(p, against);
+    return 0;
+  }
+
+  p->powermove = p->powermove - 1;
+  
+
+  /* Notifing */
+  sprintf(outbuf, "\nYou used powermove\n");
+  write(p->fd, outbuf, strlen(outbuf));
+
+  /* Notifing */
+  sprintf(outbuf, "\n%s used powermove\n",p->name);
+  write(against->fd, outbuf, strlen(outbuf));
+
+  int dam;
+  if((rand() % (1+6+1)-6) < 0) {
+    dam = (rand() % (15-10+1)+10);
+    against->hitpoint = against->hitpoint - dam;
+
+    if(against->hitpoint <= 0) {
+      dead(against, p);
+      return -1;
+    }
+   
+    sprintf(outbuf,\
+	    "\nYour powermove hited %s\n** %s's **\nhitpoint: %d\n"\
+	    , against->name, against->name, against->hitpoint);
+    write(p->fd, outbuf, strlen(outbuf));
+
+    /* Notifing against oppounet's hitpoint */
+    sprintf(outbuf, "%s's powermove hited you\nYour hitpoint: %d\n"\
+	    , p->name, against->hitpoint);
+    write(against->fd, outbuf, strlen(outbuf));
+  }
+  else {
+    /* Notifing against oppounet's hitpoint */
+    sprintf(outbuf, "%s used powermove but missed\n"\
+	    , p->name);
+    write(against->fd, outbuf, strlen(outbuf));
+
+    /* Notifing against oppounet's hitpoint */
+    sprintf(outbuf, "\nYou missed");
+    write(p->fd, outbuf, strlen(outbuf));
+  }
+  
+  players_turn(p, against);
+
+  return 0;
 }
+
 void speak_move(struct player *p) {
 
 }

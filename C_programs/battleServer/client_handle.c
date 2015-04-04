@@ -107,7 +107,17 @@ int handle_player_input(struct player *p, struct player *top) {
 	}
       }
       else if(tempbuf[0] == 'p' || tempbuf[0] == 'P') {
-
+	if (powermove_move(p, p->against_p) == -1) {
+	  struct player *temp = p->against_p;  
+	  if((against = find_against(p, top)) != NULL) {
+	    printf("Found an oppenete %d for %d\n", against->fd, p->fd);
+	    game_init(p, against);
+	  }
+	  if((against = find_against(temp, top)) != NULL) {
+	    printf("Found an oppenete %d for %d\n", against->fd, p->fd);
+	    game_init(temp, against);
+	  }	  
+	}
       }
       else if(tempbuf[0] == 's' || tempbuf[0] == 'S') {
 
