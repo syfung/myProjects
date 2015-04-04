@@ -7,6 +7,9 @@
 #define IN_BATTLE 1
 #define NOT_IN_BATTLE 0
 
+#define TURN 1
+#define WAIT 0
+
 void ask_name(int fd);
 char *read_name(char **buf, char *input_buf, int added_len);
 struct player *find_against(struct player *top);

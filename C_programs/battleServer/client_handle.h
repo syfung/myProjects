@@ -11,6 +11,7 @@ struct player {
 
   short in_game; /* Flag for in battle */
   short ready; /* Flage for ready */
+  short turn;
 
   int hitpoint;
   int powermove;

@@ -97,8 +97,8 @@ int handle_player_input(struct player *p, struct player *top) {
       printf("handle_player_input: Not ready case buf:%p\n", p->buf);
       
       if ((p->name = read_name(&(p->buf), tempbuf, len)) != NULL) {
-	printf("Player %d got a name %s\n", p->fd, p->name);
-	sprintf(outbuf, "Player %d got a name %s\n", p->fd, p->name);
+	printf("\nPlayer %d got a name %s\n", p->fd, p->name);
+	sprintf(outbuf, "\nPlayer %d got a name %s\n", p->fd, p->name);
 	broadcast(top, p->fd, outbuf, strlen(outbuf));
 
 	write(p->fd, "Waiting for opponent...\r\n", 25);
