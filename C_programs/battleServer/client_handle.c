@@ -23,7 +23,7 @@ struct player *add_player(struct player *top, int fd, struct in_addr addr) {
   ask_name(fd);
 
   p->fd = fd;
-  p->against_fd = 0;
+  p->against_p = NULL;
   p->in_game = NOT_IN_BATTLE;
   p->ready = NOT_READY;
   
@@ -91,6 +91,17 @@ int handle_player_input(struct player *p, struct player *top) {
   switch(p->in_game) {
 
   case IN_BATTLE:
+    if(p->turn == TURN) {
+      if(tempbuf[0] == 'a' || tempbuf[0] == 'A') {
+	attack_move(p, p->against_p);
+      }
+      else if(tempbuf[0] == 'p' || tempbuf[0] == 'P') {
+
+      }
+      else if(tempbuf[0] == 's' || tempbuf[0] == 'S') {
+
+      }
+    }
     break;
   case NOT_IN_BATTLE:
     if (!p->ready) {

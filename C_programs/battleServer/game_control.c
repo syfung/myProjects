@@ -100,17 +100,8 @@ void game_init(struct player *p, struct player *against) {
 	  , p->name, p->hitpoint);
   write(against->fd, outbuf, strlen(outbuf));
 
-  /* Notifing p it is his turn to strik */
-  sprintf(outbuf, "\n(A)ttack\n(P)owermove\n(S)peak\nInput move: \n");
-  write(against->fd, outbuf, strlen(outbuf));
-
-  /* Notifing against to wait to strik */
-  sprintf(outbuf, "\nIt is %s turn...\n",p->name);
-  write(p->fd, outbuf, strlen(outbuf));
-
-  p->turn = WAIT;
-  against->turn = TURN;
-
+  players_turn(p, against);
+  
   printf("Game for %s and %s is set\n", p->name, against->name);
 }
 
@@ -118,8 +109,8 @@ void set_against (struct player *p, struct player *against) {
     p->in_game = IN_BATTLE;
     against->in_game = IN_BATTLE;
     
-    p->against_fd = against->against_fd;
-    against->against_fd = p->against_fd;
+    p->against_p = against;
+    against->against_p = p;
 }
 
 void init_hit_power(struct player *p) {    
@@ -127,3 +118,36 @@ void init_hit_power(struct player *p) {
   p->powermove = rand() % (4 - 0 + 1) + 0;
 }
 
+void players_turn(struct player *p, struct player *against) {
+  char outbuf[MAX_BUF];
+  
+  /* Notifing p it is his turn to strik */
+  sprintf(outbuf, "\n(A)ttack\n(P)owermove\n(S)peak\nInput move: \n");
+  write(against->fd, outbuf, strlen(outbuf));
+
+  /* Notifing against to wait to strik */
+  sprintf(outbuf, "\nIt is %s turn...\n",against->name);
+  write(p->fd, outbuf, strlen(outbuf));
+
+  p->turn = WAIT;
+  against->turn = TURN;
+}
+
+void attack_move(struct player *p, struct player *against) {
+  char outbuf[MAX_BUF];
+  against->hitpoint = against->hitpoint - (rand() % (6-1 +1)+1);
+
+  /* Notifing against oppounet's hitpoint */
+  sprintf(outbuf, "\n** %s's **\nhitpoint: %d\n"\
+	  , against->name, against->hitpoint);
+  write(p->fd, outbuf, strlen(outbuf));
+
+  players_turn(p, against);
+ 
+}
+void powermove_move(struct player *p, struct player *against) {
+
+}
+void speak_move(struct player *p) {
+
+}

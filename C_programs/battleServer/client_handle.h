@@ -7,7 +7,7 @@
 
 struct player {
   int fd;
-  int against_fd; /* Against/Previous plyers fd */
+  struct player *against_p; /* Against/Previous plyers fd */
 
   short in_game; /* Flag for in battle */
   short ready; /* Flage for ready */
