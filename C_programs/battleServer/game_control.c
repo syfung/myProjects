@@ -52,12 +52,14 @@ char *read_name(char **buf, char *input_buf, int added_len) {
   return NULL;
 }
 
-struct player *find_against(struct player *top) {
-  struct player *p;
-  for(p = top; p; p = p->next) {
-    if (p->in_game == NOT_IN_BATTLE) {
-      if (p->ready == READY) {
-	return p;
+struct player *find_against(struct player *p, struct player *top) {
+  struct player *temp;
+  for(temp = top; temp; temp = temp->next) {
+    if(temp->in_game == NOT_IN_BATTLE) {
+      if(temp->ready == READY) {
+	if(temp != p->against_p) {
+	  return temp;
+	}
       }
     }
   }
@@ -133,17 +135,38 @@ void players_turn(struct player *p, struct player *against) {
   against->turn = TURN;
 }
 
-void attack_move(struct player *p, struct player *against) {
+void dead(struct player *dead, struct player *won) {
+  char outbuf[MAX_BUF];
+  
+  /* Notifing  */
+  sprintf(outbuf, "\nYou died\n");
+  write(dead->fd, outbuf, strlen(outbuf));
+
+  /* Notifing  */
+  sprintf(outbuf, "\nYou won\n");
+  write(won->fd, outbuf, strlen(outbuf));
+
+  dead->in_game = NOT_IN_BATTLE;
+  won->in_game = NOT_IN_BATTLE;
+}
+
+int attack_move(struct player *p, struct player *against) {
   char outbuf[MAX_BUF];
   against->hitpoint = against->hitpoint - (rand() % (6-1 +1)+1);
 
+  if(against->hitpoint < 0) {
+    dead(p, against);
+    return -1;
+  }
+  
   /* Notifing against oppounet's hitpoint */
   sprintf(outbuf, "\n** %s's **\nhitpoint: %d\n"\
 	  , against->name, against->hitpoint);
   write(p->fd, outbuf, strlen(outbuf));
 
   players_turn(p, against);
- 
+
+  return 0;
 }
 void powermove_move(struct player *p, struct player *against) {
 

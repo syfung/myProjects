@@ -93,7 +93,9 @@ int handle_player_input(struct player *p, struct player *top) {
   case IN_BATTLE:
     if(p->turn == TURN) {
       if(tempbuf[0] == 'a' || tempbuf[0] == 'A') {
-	attack_move(p, p->against_p);
+	if (attack_move(p, p->against_p) == -1) {
+	  
+	}
       }
       else if(tempbuf[0] == 'p' || tempbuf[0] == 'P') {
 
@@ -115,7 +117,7 @@ int handle_player_input(struct player *p, struct player *top) {
 	write(p->fd, "Waiting for opponent...\r\n", 25);
 	
 	struct player *against;
-	if ((against = find_against(top)) != NULL) {
+	if ((against = find_against(p, top)) != NULL) {
 	  printf("Found an oppenete %d for %d\n", against->fd, p->fd);
 	  game_init(p, against);
 	}
