@@ -3,6 +3,12 @@
 
 #define MAXDIGIT 5
 
+struct index {
+  int i;
+  int j;
+};
+
+struct index findMatch(int *items, int credit, int numItems);
 int readNum(char *buf, FILE *inFile);
 
 int main(int argc, char **argv) {
@@ -16,9 +22,14 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
-  FILE *inFile;
+  FILE *inFile, *outFile;
   
   if((inFile = fopen(argv[1], "r")) == NULL) {
+    perror("fopen");
+    exit(1);
+  }
+
+  if((outFile = fopen("ans.txt", "w")) == NULL) {
     perror("fopen");
     exit(1);
   }
@@ -29,8 +40,9 @@ int main(int argc, char **argv) {
   numCase = readNum(buf, inFile);
   printf("Number of Case: %d\n", numCase);
 
-  int credit, numItems, currentCase, i;
-  int items[1000];
+  int credit, numItems, currentCase, i, j;
+  int items[2000];
+  struct index matchIndex;
   for(currentCase = 1; currentCase <= numCase; currentCase++) {
     printf("Current Case: %d\n", currentCase);
     credit = readNum(buf, inFile);
@@ -42,12 +54,15 @@ int main(int argc, char **argv) {
       items[i] = readNum(buf, inFile);
       printf("%d\n", items[i]);
     }
-    
-  }
-  
-  
 
-  
+    matchIndex = findMatch(items, credit, numItems);
+    if(matchIndex.i < 0 || matchIndex.j < 0) {
+      printf("Matching error\n");
+    }
+
+    fprintf(outFile, "Case #%d: %d %d\n", currentCase, matchIndex.i+1, matchIndex.j+1);    
+  }
+    
   return 0;
 }
 
@@ -71,4 +86,25 @@ int readNum(char *buf, FILE *inFile) {
   sscanf(buf, "%d", &num);
   
   return num;
+}
+
+
+struct index findMatch(int *items, int credit, int numItems) {
+  int i, j;
+  struct index match;
+  for(i = 0; i < numItems; i++) {
+    for(j = i + 1; j < numItems; j++) {
+      if((items[i] + items[j]) == credit) {
+	printf("Found the combination at %d, %d, with value %d, %d\n",\
+	       i, j, items[i], items[j]);
+	printf("Avalabile credit is: %d", credit);
+	match.i = i;
+	match.j = j;
+	return match;
+      }
+    }
+  }
+  match.i = -1;
+  match.j = -1;
+  return match;
 }
